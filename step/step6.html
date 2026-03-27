@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>步驟6 詳細說明</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        /* 合併檔案主表格樣式 - 完全複製 */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background-color: white;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+        
+        th {
+            background: linear-gradient(to bottom, #2c7fb8, #1a6a9c);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #e9f7fe;
+        }
+        
+        td:nth-child(3), td:nth-child(4) {
+            background-color: #edf8b1;
+            font-weight: bold;
+        }
+        
+        td:first-child {
+            background-color: #e6f2f8;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .note {
+            color: red;
+            font-weight: bold;
+        }
+        
+        p {
+            margin: 10px 0;
+        }
+        
+        strong {
+            color: #2c7fb8;
+        }
+    </style>
+</head>
+<body>
+          <p><strong>步驟6：水平校正</strong></p>
+			   <table>
+        <!-- 標題行 -->
+        <tr>
+            <th>（6）</th>
+            <th colspan="3">水平校正補償</th>
+            <th colspan="2">做完（１）單元設置高度輸入後再做。　檢出器感度相關試驗　之前務必執行。</th>
+            <th>ＬＣＤ號碼</th>
+            <th class="highlight">22</th>
+        </tr>
+        
+        <!-- 表頭行 -->
+        <tr>
+            <th>步驟</th>
+            <th colspan="2">設定項目</th>
+
+            <th>進行操作的盤</th>
+            <th>操作</th>
+         
+            <th>表示</th>
+            <th>記錄</th>
+            <th>備考</th>
+        </tr>
+        
+        <!-- 復舊 -->
+        <tr>
+            <td>復舊</td>
+            <td colspan="2">復舊操作</td>
+
+            <td>中央</td>
+            <td>按下「復舊」SW</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- 準備① -->
+        <tr>
+            <td>準備①</td>
+            <td colspan="2" rowspan="2">資料設定準備共通操作</td>
+
+            <td rowspan="2">中央</td>
+            <td>模式「<span class="note">手動</span>」</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- 準備② -->
+        <tr>
+            <td>準備②</td>
+
+
+
+            <td>按下「維修保養」ＳＷ和「表示試驗」ＳＷ２秒</td>
+            <td>資料設定主選單<br>データ設定メインメニュー</td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- ① -->
+        <tr>
+            <td>①</td>
+            <td rowspan="5"></td>
+            <td rowspan="4">確認</td>
+            <td rowspan="5">中央</td>
+            <td>「移動（△▽）」SW</td>
+             <td>LCD「２２　水平補償」<br>LCDに「２２　ﾕﾆｯﾄﾎｳｺｳｵﾌｾｯﾄ」</td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- ② -->
+        <tr>
+            <td>②</td>
+
+            <td>按下「選擇/實行」SW</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- ③ -->
+        <tr>
+            <td>③</td>
+
+            <td>「移動（△▽）」SW</td>
+            <td>LCD「目的單元號碼」<br>LCDに「目的のユニット番号」</td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- ④ -->
+        <tr>
+            <td>④</td>
+
+            <td>按下「選擇/實行」SW</td>
+
+            <td>ＬＣＤ「   UNIT 號碼 <br>   offset +00  」</td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- ⑤ -->
+        <tr>
+            <td>⑤</td>
+
+            <td></td>
+            <td>確認</td>
+            <td>「移動（△▽）」SW<br>按下「選擇/實行」SW</td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- 回到① -->
+        <tr>
+            <td>回到①</td>
+            <td colspan="2" rowspan="3">回到資料設定共通操作</td>
+            <td rowspan="3">中央</td>
+            <td>「取消/終了」SW</td>
+            <td>回到LCD「單元選擇画面」<br>LCD「ユニット選擇画面」に戻る</td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- 回到② -->
+        <tr>
+            <td>回到②</td>
+
+            <td>「取消/終了」SW</td>
+            <td>回到LCD「資料設定模式」<br>LCD「データ設定モード」に戻る</td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- 回到③ -->
+        <tr>
+            <td>回到③</td>
+
+            <td>按下「維修保養」ＳＷ和「表示試驗」ＳＷ ２秒</td>
+            <td>平常動作模式<br>通常動作モード</td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+			
+			<p></p>
+  
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>步驟7 詳細說明</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        /* 合併檔案主表格樣式 - 完全複製 */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background-color: white;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+        
+        th {
+            background: linear-gradient(to bottom, #2c7fb8, #1a6a9c);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #e9f7fe;
+        }
+        
+        td:nth-child(3), td:nth-child(4) {
+            background-color: #edf8b1;
+            font-weight: bold;
+        }
+        
+        td:first-child {
+            background-color: #e6f2f8;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .note {
+            color: red;
+            font-weight: bold;
+        }
+        
+        p {
+            margin: 10px 0;
+        }
+        
+        strong {
+            color: #2c7fb8;
+        }
+    </style>
+</head>
+<body>
+           <p><strong>步驟7：垂直校正</strong></p>
+			   <table>
+        <!-- 標題行 -->
+        <tr>
+            <th>（7）</th>
+            <th colspan="3">檢出器垂直鏡之垂直0點輸入</th>
+            <th colspan="3">做完（１）單元設置高度輸入後再做。　檢出器感度相關試驗　之前務必執行。</th>
+            <th>ＬＣＤ號碼</th>
+            <th class="highlight">23</th>
+        </tr>
+        
+        <!-- 表頭行 -->
+        <tr>
+            <th>步驟</th>
+            <th colspan="2">設定項目</th>
+            <th>進行操作的盤</th>
+            <th>操作</th>
+            <th>表示</th>
+            <th>作業内容</th>
+            <th>記錄</th>
+            <th>備考</th>
+        </tr>
+        
+        <!-- 準備① -->
+        <tr>
+            <td>準備①</td>
+            <td rowspan="2" colspan="2">資料設定準備共通操作</td>
+            <td rowspan="2">中央</td>
+            <td>模式「<span class="note">手動</span>」</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- 準備② -->
+        <tr>
+            <td>準備②</td>
+            <td>按下「維修保養」ＳＷ和「表示試驗」ＳＷ     ２秒</td>
+            <td>資料設定主選單<br>データ設定メインメニュー</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- ① -->
+        <tr>
+            <td rowspan="2">①</td>
+            <td rowspan="11" class="left-align">巡查型火災檢出器之垂直0點調整<br>【目的】<br>使用實際火點記住垂直鏡巡查0點（直下）開始的角度（步距數）。實際上，藉由在最遠監視距離的實際火點位置，輸入理論上的步距數來實現。</td>
+            <td rowspan="2">準備</td>
+            <td rowspan="4">中央</td>
+            <td>「移動（△▽）」SW</td>
+            <td>LCD「２３　垂直0點方向」<br>LCDに「２３　スイチョクゼロホウコウ」</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>按下「選擇/實行」SW</td>
+            <td></td>
+            <td></td>
+            <td></td>
+			<td></td>
+        </tr>
+        
+        <!-- ② -->
+        <tr>
+            <td rowspan="2">②</td>
+            <td rowspan="2"></td>
+            <td>「移動（△▽）」SW</td>
+            <td>LCD「目的單元號碼」<br>LCDに「目的のユニット番号」</td>
+            <td>在實驗場是「單元１」</td>
+            <td></td>
+			<td></td>
+        </tr>
+        <tr">
+            <td>按下「選擇/實行」SW</td>
+            <td>LCD「用實行SW開始」<br>LCDに「實行SWで開始」</td>
+            <td></td>
+            <td></td> 
+            <td></td>			
+        </tr>
+        
+        <!-- ③ -->
+        <tr>
+            <td>③</td>
+            <td class="left-align" rowspan="3">預備設定<br>為了將設定場所（監視距離２３ｍ處）作為監視領域之事前設定。距檢出器原點２３ｍ位置之水平距離及步距數與和用表求出之值相同為止。不管幾次請重複做到相同的值為止。</td>
+            <td class="left-align" colspan="4">①以目前單元之設置高度，用EXCEL計算表（另外準備）算出相當樓地板２３ｍ之水平距離。<br>②使用金屬捲尺校正計算出的水平距離，設定距檢出器迴旋中心的距離。<br>　（注意）　檢出器的迴旋中心請使用雷射墨出器在樓地板面做正確的點。<br>③設定之水平距離和加熱器（ＳＨ）之腳架（腳）的後腳一致，將加熱器（ＳＨ）點火進行檢出。<br>　⇒　檢出器停在火點方向。　⇒直到按下下述「選擇/實行」SW為止，火點為點火的狀態。</td>
+            <td></td>
+            <td></td>			
+        </tr>
+        
+        <!-- ⑥ -->
+        <tr>
+		    <td>⑥</td>
+            <td rowspan="2">中央</td>
+            <td>「表示切換」SW和<br>「移動（△▽）」SW</td>
+            <td>ＬＣＤ「Ｖ＊＊＊」<br>ＬＣＤに「Ｖ＊＊＊」</td>
+            <td class="left-align">「表示切換」SW：位數（游標位置）變動。<br>「移動（）」SW：數值變動。<br>「Ｖ＊＊＊」的意思是現在檢出之位置有＊＊＊步距數的意思。</td>
+            <td></td>
+            <td></td>
+        </tr>
+		
+        <tr>
+		            <td>⑦</td>
+            <td>按下「選擇/實行」SW</td>
+            <td>LCD「用實行SW開始」<br>LCDに「實行SWで開始」</td>
+            <td>登錄＊＊＊步距之。</td>
+            <td></td>
+            <td></td>			
+		     </tr>
+        
+        <!-- ⑧ -->
+        <tr>
+            <td>⑧</td>
+            <td class="left-align" rowspan="4">此次設定<br>（監視距離２３ｍ）</td>
+            <td class="left-align" colspan="4">①以目前單元之設置高度，用EXCEL計算表（另外準備）算出相當監視距離２３ｍ之步距數（＊＊＊）。<br>②在監視距離２３ｍ之樓地板面將加熱器（ＳＨ）點火進行檢出。　⇒　檢出器在火點方向停止。<br>　　⇒直到按下下述「選擇/實行」SW為止，火點為點火的狀態。SH在按下「選擇/實行」後直到做完下面的驗證終了為止都不能動。</td>
+            <td></td>
+            <td></td>
+
+        </tr>
+        
+        <!-- ⑨ -->
+        <tr>
+            <td>⑨</td>
+            <td rowspan="3">中央</td>
+            <td>「表示切換」SW和<br>「移動（△▽）」SW</td>
+            <td>ＬＣＤ「Ｖ＊＊＊」<br>ＬＣＤに「Ｖ＊＊＊」</td>
+            <td class="left-align">「表示切換」SW：位數（游標位置）變動。<br>「移動（）」SW：數值變動。<br>「Ｖ＊＊＊」的意思是現在檢出之位置有＊＊＊步距數的意思。</td>
+            <td></td>
+            <td></td>			
+        </tr>
+        <tr >
+		    <td>⑨</td>
+            <td>按下「選擇/實行」SW</td>
+            <td>LCD「用實行SW開始」<br>LCDに「實行SWで開始」</td>
+            <td>登錄監視距離２３ｍ之步距數「＊＊＊」。</td>
+            <td></td>
+            <td></td>			
+			
+        </tr>
+        
+        <!-- ⑪ -->
+        <tr>
+            <td>⑪</td>
+            <td>記錄</td>
+            <td></td>
+            <td>記錄監視距離２３ｍ之步距數「＊＊＊」。</td>
+            <td>記錄在資料表</td>
+            <td>⑧-1</td>
+        </tr>
+        
+        <!-- 復舊 -->
+        <tr>
+            <td>復舊</td>
+            <td>復舊操作</td>
+            <td></td>			
+            <td>中央</td>
+            <td>按下「復舊」SW</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- 驗證① -->
+        <tr>
+            <td>驗證①</td>
+            <td rowspan="7">驗證</td>
+            <td class="left-align" rowspan="6">驗證<br>火點不動，驗證誤差在±２步距以内。</td>
+            <td class="left-align" colspan="4">①監視距離２３ｍ之加熱器（ＳＨ）點火，進行檢出。(ＳＨ從上記設定時就不能動，在同樣的位置。）⇒　檢出器在火點方向停止。<br>②做５次檢出，在用表求出之步距數有±１步距以内。</td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- 驗證② -->
+        <tr>
+            <td>驗證②</td>
+            <td rowspan="5">中央</td>
+            <td>「維修保養」SWを押す</td>
+            <td>維修保養模式<br>メンテナンスモード</td>
+            <td></td>
+            <td></td>
+            <td>01→03</td>
+        </tr>
+        
+        <!-- 驗證③ -->
+            <td>驗證③</td>		
+            <td>「移動（△▽）」SW</td>
+            <td>LCD「３　火災步距監視」<br>LCDに「３　カサイステップモニタ」</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- 驗證④ -->
+            <td>驗證④</td>			
+            <td>按下「選擇/實行」SW</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- 驗證⑤ -->
+            <td>驗證⑤</td>			
+            <td>「移動（△▽）」SW</td>
+            <td>LCD「目的單元號碼」<br>LCDに「目的のユニット番号」</td>
+            <td>在實驗場是「單元１」</td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- 驗證⑥ -->
+            <td>驗證⑥</td>			
+            <td>按下「選擇/實行」SW</td>
+            <td>ＬＣＤ「Ｈ＊＊＊」「Ｖ＊＊＊」<br>ＬＣＤに「Ｈ＊＊＊」「Ｖ＊＊＊」</td>
+            <td>確認設定之「Ｖ＊＊＊」和顯示之「Ｖ＃＃＃」的差在±２步距以内。</td>
+            <td>記錄在資料表</td>
+            <td>⑧-2</td>
+        </tr>
+        
+        <!-- 驗證⑦ -->
+		
+        <tr>
+            <td>驗證⑦</td>
+            <td>再設定</td>
+            <td class="left-align" colspan="4">誤差不在±２步距以内時，再次以監視距離２３ｍ做設定（此次設定）修正。<br>此時，修正EXCEL表的誤差或ＳＨ的設置位置等更詳細的部分後再次進行。</td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- 回到 -->
+        <tr>
+            <td>回到</td>
+            <td>回到維修保養操作</td>
+            <td>回到</td>
+            <td>中央</td>
+            <td>「維修保養」SW</td>
+            <td>平常動作模式<br>通常動作モード</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        
+        <!-- 復舊 -->
+        <tr>
+            <td>復舊</td>
+            <td>復舊操作</td>
+            <td></td>
+            <td>中央</td>
+            <td>按下「復舊」SW</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+			
+			
+			<p></p>
+</body>
+</html>
