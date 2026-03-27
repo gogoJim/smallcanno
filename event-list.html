@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>事件列表 (合併step1樣式)</title>
+    <style>
+        /* 基礎變數保留，但表格全面採用step1寶藍風格 */
+        :root {
+            --primary-color: #2c7fb8;
+            --accent-color: #edf8b1;
+            --dark-gray: #333;
+        }
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            color: var(--dark-gray);
+        }
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        /* ----- 以下完全採用step1的表格樣式，套用到所有表格 ----- */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background-color: white;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 14px;
+        }
+
+        th {
+            background: linear-gradient(to bottom, #2c7fb8, #1a6a9c); /* 寶藍色漸層 */
+            color: white;
+            font-weight: bold;
+            font-size: 15px;
+            padding: 15px 8px;
+            border: 1px solid #1a5a7a;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        td {
+            border: 1px solid #ddd;
+            padding: 12px 8px;
+            text-align: left;
+            vertical-align: middle;
+            transition: background-color 0.2s;
+        }
+
+        /* 斑馬紋 (step1 使用 #f8f9fa 偶數行) */
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e9f7fe;
+        }
+
+        /* 第一欄(No.) 套用淡藍底色，如同step1的td:first-child */
+        td:first-child {
+            background-color: #e6f2f8;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* 讓原本的 .manual-mode 紅色字在淡藍底色上仍然清楚 */
+        .manual-mode {
+            color: #FF0000;
+            font-weight: bold;
+        }
+
+        /* 為了保留 step1 對特定欄位的強調，我們將第三欄(事件ID)加上黃綠色底色 (類似 step1 的 td:nth-child(3)) */
+        td:nth-child(3) {
+            background-color: #edf8b1;
+            font-weight: normal;
+        }
+        /* 但不要覆蓋第一欄的淡藍，所以用更精確的選取 */
+        td:nth-child(3):not(:first-child) {
+            background-color: #edf8b1;
+        }
+        /* 第四欄(機器號碼)也可考慮比照 step1 的 td:nth-child(4) 加上黃綠，但step1中第四欄也是黃綠，我們也加上以維持風格 */
+        td:nth-child(4) {
+            background-color: #edf8b1;
+            font-weight: normal;
+        }
+        /* 但第一欄、第二欄不要黃綠，只保留原本的底色 */
+        td:first-child, td:nth-child(2) {
+            background-color: transparent; /* 讓斑馬紋或第一欄淡藍正常顯示 */
+        }
+        /* 重新確保第一欄的淡藍 */
+        td:first-child {
+            background-color: #e6f2f8 !important;
+        }
+        /* 對於偶數行，td:first-child 也維持淡藍，但可加上微調 */
+        tr:nth-child(even) td:first-child {
+            background-color: #dce5f0; /* 稍微深一點點，維持區別 */
+        }
+
+        /* 表格標題欄位寬度可保留原設定 */
+        .col-no { width: 8%; }
+        .col-type { width: 45%; }
+        .col-id { width: 15%; }
+        .col-device { width: 12%; }
+
+        /* 底部說明的樣式 */
+        .note {
+            margin-top: 20px;
+            color: #666;
+            font-size: 13px;
+        }
+        /* 為了讓紅色字在黃綠底色上也明顯 */
+        .manual-mode {
+            color: #d10000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 表格完全套用 step1 寶藍標題 + 黃綠內容欄位(事件ID/機器號碼) + 第一欄淡藍 -->
+    <table>
+        <thead>
+            <tr>
+                <th class="col-no">No.</th>
+                <th class="col-type">連動元事件種別</th>
+                <th class="col-id">事件ID</th>
+                <th class="col-device">機器號碼</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>1</td><td>中央控制盤 火災移報輸入No.1~No.8</td><td>137~144</td><td>0</td></tr>
+            <tr><td>2</td><td>中央控制盤 汎用移報輸入No.1~No.20</td><td>147~166</td><td>0</td></tr>
+            <tr><td>3</td><td>中央控制盤 Pump起動確認輸入</td><td>146</td><td>0</td></tr>
+            <tr><td>4</td><td>中央控制盤 其他控制盤放水中移報輸入</td><td>145</td><td>0</td></tr>
+            <tr><td>5</td><td>中央控制盤 完全音響輸入停止SW</td><td>125</td><td>0</td></tr>
+            <tr><td>6</td><td>中央控制盤 自動放水模式</td><td>116</td><td>0</td></tr>
+            <tr><td>7</td><td>中央控制盤 自動迴旋模式</td><td>117</td><td>0</td></tr>
+            <tr><td>8</td><td>中央控制盤 手動模式</td><td>118</td><td>0</td></tr>
+            <tr><td>9</td><td>中央控制盤 自火報移報輸入遮斷SW</td><td>126</td><td>0</td></tr>
+            <tr><td>10</td><td>中央控制盤 系統復舊中</td><td>105</td><td>0</td></tr>
+            <tr><td>11</td><td>中央控制盤 SCPU間通訊異常</td><td>168</td><td>0</td></tr>
+            <tr><td>12</td><td>中央控制盤 E2PROM讀取/寫入障害</td><td>169</td><td>0</td></tr>
+            <tr><td>13</td><td>中央控制盤 E2PROM存記錄檔障害</td><td>170</td><td>0</td></tr>
+            <tr><td>14</td><td>中央控制盤 SRAM存記錄檔障害</td><td>171</td><td>0</td></tr>
+            <tr><td>15</td><td>中央控制盤 RTC存記錄檔障害</td><td>172</td><td>0</td></tr>
+            <tr><td>16</td><td>中央控制盤 預備電源電壓低下</td><td>173</td><td>0</td></tr>
+            <tr><td>17</td><td>中央控制盤 預備電源未接續</td><td>174</td><td>0</td></tr>
+            <tr><td>18</td><td>中央控制盤 障害屬性的汎用移報輸入(代表)</td><td>175</td><td>0</td></tr>
+            <tr><td>19</td><td>中央控制盤 AC電源斷</td><td>176</td><td>0</td></tr>
+            <tr><td>20</td><td>中央控制盤 障害屬性的汎用移報輸入No.1~No.20</td><td>177~196</td><td>0</td></tr>
+            <tr><td class="manual-mode">21</td><td>單元控制盤#1~8 走查型檢出器發報</td><td class="manual-mode">1</td><td>1~8</td></tr>
+            <tr><td>22</td><td>單元控制盤#1~8 AND用探測器發報</td><td>3</td><td>1~8</td></tr>
+            <tr><td>23</td><td>單元控制盤#1~8 火災區域No.1~No.8</td><td>202~209</td><td>1~8</td></tr>
+            <tr><td>24</td><td>單元控制盤#1~8 障害 主線障害</td><td>35</td><td>1~8</td></tr>
+            <tr><td>25</td><td>單元控制盤#1~8 點檢閥全閉</td><td>26</td><td>1~8</td></tr>
+            <tr><td class="manual-mode">26</td><td>單元控制盤#1~8 障害代表</td><td class="manual-mode">201</td><td>1~8</td></tr>
+            <tr><td>27</td><td>單元控制盤#1~8 單元遮蔽</td><td>128</td><td>1~8</td></tr>
+            <tr><td>28</td><td>單元控制盤#1~8 檢出器遮蔽</td><td>129</td><td>1~8</td></tr>
+            <tr><td class="manual-mode">29</td><td>單元控制盤#1~8 放水中</td><td class="manual-mode">22</td><td>1~8</td></tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; color: #666; font-size: 13px;">
+        ※ 表格已套用 step1 的寶藍色標題列、斑馬紋、事件ID/機器號碼欄位為黃綠色底色，第一欄No.為淡藍底色。紅色文字表示該事件通常被要求的特殊設定。
+    </div>
+
+</body>
+</html>

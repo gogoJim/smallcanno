@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消防配管水力計算器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            padding: 30px;
+            overflow: hidden;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        h1 {
+            color: #e63946;
+            margin-bottom: 8px;
+            font-size: 2rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1rem;
+            max-width: 800px;
+            margin: 0 auto 15px;
+        }
+        
+        .input-panel {
+            margin-bottom: 30px;
+        }
+        
+        .results-panel {
+            display: none;
+        }
+        
+        .results-panel.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .panel-title {
+            color: #1d3557;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e63946;
+            display: flex;
+            align-items: center;
+        }
+        
+        .panel-title i {
+            margin-right: 10px;
+            color: #e63946;
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .input-group {
+            background-color: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #1d3557;
+            transition: all 0.3s ease;
+        }
+        
+        .input-group:focus-within {
+            border-left-color: #e63946;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .input-subgroup {
+            margin-bottom: 15px;
+        }
+        
+        .input-subgroup:last-child {
+            margin-bottom: 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #1d3557;
+            font-size: 0.95rem;
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .input-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        input, select {
+            padding: 12px 14px;
+            border: 1px solid #d1d9e6;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background-color: white;
+        }
+        
+        .input-row input {
+            flex: 1;
+        }
+        
+        .unit-selector {
+            width: 90px;
+        }
+        
+        input:focus, select:focus {
+            border-color: #1d3557;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(29, 53, 87, 0.1);
+        }
+        
+        .unit-info {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+        
+        .unit-conversion {
+            font-size: 0.8rem;
+            color: #e63946;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        
+        .button-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+        
+        button {
+            padding: 14px 35px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 160px;
+        }
+        
+        button i {
+            margin-right: 8px;
+        }
+        
+        .calculate-btn {
+            background-color: #1d3557;
+            color: white;
+        }
+        
+        .calculate-btn:hover {
+            background-color: #e63946;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(230, 57, 70, 0.2);
+        }
+        
+        .reset-btn {
+            background-color: #f8f9fa;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        
+        .reset-btn:hover {
+            background-color: #e9ecef;
+            transform: translateY(-2px);
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 8px;
+            padding: 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-top: 4px solid #2a9d8f;
+            transition: transform 0.3s;
+        }
+        
+        .result-card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .result-card.highlight {
+            border-top-color: #e63946;
+            background: linear-gradient(to bottom right, #fef9f9, #fff);
+        }
+        
+        .result-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        
+        .result-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1d3557;
+            margin-bottom: 4px;
+        }
+        
+        .result-unit {
+            font-size: 0.95rem;
+            color: #e63946;
+            font-weight: 600;
+        }
+        
+        .result-description {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 6px;
+        }
+        
+        .results-messages {
+            margin-top: 25px;
+        }
+        
+        .alert {
+            padding: 15px 18px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .alert i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .formula-section {
+            background-color: #f8f9fa;
+            padding: 18px;
+            border-radius: 8px;
+            margin-top: 25px;
+            border-left: 4px solid #6c757d;
+        }
+        
+        .formula-title {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .formula-title i {
+            margin-right: 8px;
+        }
+        
+        .formula {
+            font-family: 'Courier New', monospace;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.85rem;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .elbow-types {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .elbow-type-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .elbow-type-item input {
+            width: 70px;
+            padding: 8px 10px;
+        }
+        
+        .effective-length-display {
+            background-color: #e8f4fc;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            border-left: 3px solid #1d3557;
+            font-size: 0.9rem;
+        }
+        
+        .effective-length-value {
+            font-weight: 700;
+            color: #e63946;
+            font-size: 1.1rem;
+        }
+        
+        /* 載入動畫 */
+        .loading {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-container {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            }
+            
+            .elbow-types {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* 專業感調整 */
+        .section-separator {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e63946, transparent);
+            margin: 25px 0;
+            width: 100%;
+        }
+    </style>
+    <!-- 加入Font Awesome圖示 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-fire-extinguisher"></i> 一齊開放閥二次側管水力計算器</h1>
+            <p class="subtitle">本計算器根據哈森-威廉姆斯公式進行水力計算，用於確定消防配管系統中的流速、摩擦損失、所需入口壓力及水流到達時間。</p>
+        </div>
+        
+        <!-- 輸入區域 -->
+        <div class="input-panel">
+            <h2 class="panel-title"><i class="fas fa-edit"></i> 輸入參數</h2>
+            
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="pipeDiameter"><i class="fas fa-ruler"></i> 管徑</label>
+                    <div class="input-row">
+                        <input type="number" id="pipeDiameter" min="10" max="500" step="0.1" value="65" placeholder="輸入管徑數值">
+                        <select id="diameterUnit" class="unit-selector">
+                            <option value="mm">A (mm)</option>
+                            <option value="inch">吋</option>
+                        </select>
+                    </div>
+                    <div class="unit-info" id="diameterInfo">常用管徑: 1"=26.6mm, 2"=52.5mm, 4"=102.3mm</div>
+                </div>
+                
+                <div class="input-group">
+                    <label><i class="fas fa-ruler-vertical"></i> 管長與彎頭計算</label>
+                    
+                    <div class="input-subgroup">
+                        <label for="straightLength">直管長度 (m)</label>
+                        <input type="number" id="straightLength" min="1" max="1000" step="1" value="80" placeholder="輸入直管長度">
+                        <div class="unit-info">管道直線部分的總長度</div>
+                    </div>
+                    
+                    <div class="input-subgroup">
+                        <label><i class="fas fa-bend"></i> 彎頭數量與等效長度</label>
+                        <div class="elbow-types">
+                            <div class="elbow-type-item">
+                                <span>90°彎頭：</span>
+                                <input type="number" id="elbow90" min="0" max="50" value="4" placeholder="數量">
+                                <span>個</span>
+                            </div>
+                            <div class="elbow-type-item">
+                                <span>45°彎頭：</span>
+                                <input type="number" id="elbow45" min="0" max="50" value="0" placeholder="數量">
+                                <span>個</span>
+                            </div>
+                            <div class="elbow-type-item">
+                                <span>T型三通：</span>
+                                <input type="number" id="tee" min="0" max="50" value="0" placeholder="數量">
+                                <span>個</span>
+                            </div>
+                            <div class="elbow-type-item">
+                                <span>閥門：</span>
+                                <input type="number" id="valve" min="0" max="50" value="0" placeholder="數量">
+                                <span>個</span>
+                            </div>
+                        </div>
+                        <div class="unit-info">彎頭與管件的等效長度將自動計算並加入總管長</div>
+                    </div>
+                    
+                    <div class="effective-length-display" id="effectiveLengthDisplay">
+                        <div>有效管長計算：</div>
+                        <div>直管長度: <span id="straightLengthDisplay">80</span> m + 彎頭等效長度: <span id="elbowEquivDisplay">0</span> m = <span class="effective-length-value" id="totalLengthDisplay">80</span> m</div>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="endPressure"><i class="fas fa-tachometer-alt"></i> 末端壓力 (MPa)</label>
+                    <input type="number" id="endPressure" min="0.05" max="1.0" step="0.01" value="0.5" placeholder="輸入末端壓力">
+                    <div class="unit-info">消防撒水頭工作壓力通常為0.05-0.4 MPa (0.5-4 bar)</div>
+                    <div class="unit-conversion" id="pressureConversion">0.2 MPa = 2.0 bar = 20.4 mH₂O</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="flowRate"><i class="fas fa-tint"></i> 流量 (L/min)</label>
+                    <input type="number" id="flowRate" min="10" max="5000" step="10" value="550" placeholder="輸入流量">
+                    <div class="unit-info">消防栓流量約380-600 L/min，撒水頭約60-150 L/min</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="heightDiff"><i class="fas fa-mountain"></i> 高度差 (m)</label>
+                    <input type="number" id="heightDiff" min="-50" max="50" step="0.5" value="3" placeholder="輸入高度差">
+                    <div class="unit-info">入口與末端的高度差(末端較高為正值)</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="roughnessCoeff"><i class="fas fa-water"></i> 粗糙係數 (C值)</label>
+                    <select id="roughnessCoeff">
+                        <option value="150">塑膠管 (C=150) - PVC, CPVC</option>
+                        <option value="130" selected>新鋼管/鑄鐵管 (C=130)</option>
+                        <option value="120">舊鋼管/鑄鐵管 (C=120)</option>
+                        <option value="100">嚴重腐蝕管 (C=100)</option>
+                        <option value="custom">自訂數值</option>
+                    </select>
+                    <div class="unit-info" id="customCContainer" style="display:none; margin-top:8px;">
+                        <input type="number" id="customCValue" min="80" max="150" step="5" value="130" placeholder="輸入自訂C值">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-container">
+                <button id="calculateBtn" class="calculate-btn">
+                    <i class="fas fa-calculator"></i> 水利計算
+                </button>
+                <button id="resetBtn" class="reset-btn">
+                    <i class="fas fa-redo"></i> 重置
+                </button>
+            </div>
+        </div>
+        
+        <!-- 分隔線 -->
+        <div class="section-separator"></div>
+        
+        <!-- 輸出區域 -->
+        <div class="results-panel" id="resultsPanel">
+            <h2 class="panel-title"><i class="fas fa-chart-line"></i> 計算結果</h2>
+            
+            <div class="results-grid">
+                <div class="result-card highlight">
+                    <div class="result-label">流速</div>
+                    <div class="result-value" id="velocityResult">0.00</div>
+                    <div class="result-unit">公尺/秒 (m/s)</div>
+                    <div class="result-description">管內水流速度</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-label">水流到達時間</div>
+                    <div class="result-value" id="travelTimeResult">0.00</div>
+                    <div class="result-unit">秒 (s)</div>
+                    <div class="result-description">從入口到末端時間</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-label">有效管長</div>
+                    <div class="result-value" id="effectiveLengthResult">0.00</div>
+                    <div class="result-unit">公尺 (m)</div>
+                    <div class="result-description">直管+彎頭等效長度</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-label">摩擦損失水頭</div>
+                    <div class="result-value" id="frictionLossResult">0.00</div>
+                    <div class="result-unit">公尺 (m)</div>
+                    <div class="result-description">管道摩擦損失</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-label">所需入口壓力</div>
+                    <div class="result-value" id="inletPressureResult">0.00</div>
+                    <div class="result-unit">百萬帕 (MPa)</div>
+                    <div class="result-description">系統入口所需壓力</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-label">所需入口壓力</div>
+                    <div class="result-value" id="inletPressureMResult">0.00</div>
+                    <div class="result-unit">公尺水柱 (m)</div>
+                    <div class="result-description">系統入口所需壓力</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-label">管內徑</div>
+                    <div class="result-value" id="innerDiameterResult">0.00</div>
+                    <div class="result-unit">公厘 (mm)</div>
+                    <div class="result-description">管道內徑尺寸</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-label">彎頭等效長度</div>
+                    <div class="result-value" id="elbowEquivalentResult">0.00</div>
+                    <div class="result-unit">公尺 (m)</div>
+                    <div class="result-description">彎頭總等效長度</div>
+                </div>
+            </div>
+            
+            <div class="results-messages" id="resultsMessages">
+                <!-- 動態顯示警告/資訊訊息 -->
+            </div>
+            
+            <div class="formula-section">
+                <div class="formula-title"><i class="fas fa-square-root-alt"></i> 計算公式說明</div>
+                <div class="formula">1. 流速(v) = 流量(Q) / 管截面積(A)</div>
+                <div class="formula">2. 摩擦損失(hf) = (10.67 × L × Q¹·⁸⁵) / (C¹·⁸⁵ × d⁴·⁸⁷) [哈森-威廉姆斯公式]</div>
+                <div class="formula">3. 所需入口壓力(P_inlet) = P_outlet + hf + ΔH</div>
+                <div class="formula">4. 水流到達時間(t) = 管長(L) / 流速(v)</div>
+                <div class="formula">5. 有效管長(L_eff) = 直管長度 + Σ(彎頭數量 × 等效長度)</div>
+                <div style="margin-top: 10px; font-size: 0.85rem; color: #666;">
+                    其中：L=有效管長(m), Q=流量(m³/s), C=粗糙係數, d=管徑(m), ΔH=高度差(m)
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p><i class="fas fa-exclamation-circle"></i> 消防配管水力計算器 v2.2 | 此工具僅供設計參考，實際應用請諮詢專業工程師</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const calculateBtn = document.getElementById('calculateBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const resultsPanel = document.getElementById('resultsPanel');
+            const resultsMessages = document.getElementById('resultsMessages');
+            const roughnessCoeff = document.getElementById('roughnessCoeff');
+            const customCContainer = document.getElementById('customCContainer');
+            const diameterUnit = document.getElementById('diameterUnit');
+            const diameterInfo = document.getElementById('diameterInfo');
+            const pressureConversion = document.getElementById('pressureConversion');
+            const endPressureInput = document.getElementById('endPressure');
+            
+            // 彎頭等效長度係數 (單位：倍管徑)
+            const elbowEquivalents = {
+                elbow90: 30,    // 90°彎頭等效長度 = 30倍管徑
+                elbow45: 16,    // 45°彎頭等效長度 = 16倍管徑
+                tee: 60,        // T型三通等效長度 = 60倍管徑
+                valve: 300      // 閥門等效長度 = 300倍管徑
+            };
+            
+            // 管徑單位轉換表 (吋轉mm)
+            const inchToMM = {
+                "0.5": 15.8,   // 1/2"
+                "0.75": 21.0,  // 3/4"
+                "1": 26.6,     // 1"
+                "1.25": 34.0,  // 1 1/4"
+                "1.5": 40.9,   // 1 1/2"
+                "2": 52.5,     // 2"
+                "2.5": 66.7,   // 2 1/2"
+                "3": 79.3,     // 3"
+                "4": 102.3,    // 4"
+                "5": 128.2,    // 5"
+                "6": 154.1,    // 6"
+                "8": 202.7,    // 8"
+                "10": 254.5,   // 10"
+                "12": 303.3    // 12"
+            };
+            
+            // 管徑單位切換事件
+            diameterUnit.addEventListener('change', function() {
+                updateDiameterInfo();
+                updateEffectiveLengthDisplay();
+            });
+            
+            // 彎頭數量變更事件
+            const elbowInputs = ['pipeDiameter', 'straightLength', 'elbow90', 'elbow45', 'tee', 'valve'];
+            elbowInputs.forEach(id => {
+                document.getElementById(id).addEventListener('input', updateEffectiveLengthDisplay);
+            });
+            
+            // 更新管徑參考資訊
+            function updateDiameterInfo() {
+                if (diameterUnit.value === 'inch') {
+                    diameterInfo.textContent = '常用管徑: 1/2"=15.8mm, 1"=26.6mm, 2"=52.5mm, 4"=102.3mm';
+                } else {
+                    diameterInfo.textContent = '常用管徑: DN15=15.8mm, DN25=26.6mm, DN50=52.5mm, DN100=102.3mm';
+                }
+            }
+            
+            // 更新壓力換算顯示
+            function updatePressureConversion(value) {
+                const mpa = parseFloat(value) || 0.2;
+                const bar = mpa * 10;
+                const mh2o = mpa * 101.972;
+                pressureConversion.textContent = `${mpa.toFixed(3)} MPa = ${bar.toFixed(1)} bar = ${mh2o.toFixed(1)} mH₂O`;
+            }
+            
+            // 計算並更新有效管長顯示
+            function updateEffectiveLengthDisplay() {
+                // 取得管徑
+                const pipeDiameterInput = parseFloat(document.getElementById('pipeDiameter').value) || 50;
+                const diameterUnitVal = document.getElementById('diameterUnit').value;
+                
+                // 管徑單位轉換
+                let pipeDiameterMM;
+                if (diameterUnitVal === 'inch') {
+                    const inchValue = pipeDiameterInput.toString();
+                    if (inchToMM[inchValue]) {
+                        pipeDiameterMM = inchToMM[inchValue];
+                    } else {
+                        pipeDiameterMM = pipeDiameterInput * 25.4;
+                    }
+                } else {
+                    pipeDiameterMM = pipeDiameterInput;
+                }
+                
+                const pipeDiameterM = pipeDiameterMM / 1000; // 轉為公尺
+                
+                // 取得直管長度
+                const straightLength = parseFloat(document.getElementById('straightLength').value) || 80;
+                
+                // 取得彎頭數量
+                const elbow90Count = parseInt(document.getElementById('elbow90').value) || 0;
+                const elbow45Count = parseInt(document.getElementById('elbow45').value) || 0;
+                const teeCount = parseInt(document.getElementById('tee').value) || 0;
+                const valveCount = parseInt(document.getElementById('valve').value) || 0;
+                
+                // 計算彎頭等效長度
+                const elbow90Equiv = elbow90Count * elbowEquivalents.elbow90 * pipeDiameterM;
+                const elbow45Equiv = elbow45Count * elbowEquivalents.elbow45 * pipeDiameterM;
+                const teeEquiv = teeCount * elbowEquivalents.tee * pipeDiameterM;
+                const valveEquiv = valveCount * elbowEquivalents.valve * pipeDiameterM;
+                
+                // 總彎頭等效長度
+                const totalElbowEquiv = elbow90Equiv + elbow45Equiv + teeEquiv + valveEquiv;
+                
+                // 有效管長
+                const effectiveLength = straightLength + totalElbowEquiv;
+                
+                // 更新顯示
+                document.getElementById('straightLengthDisplay').textContent = straightLength.toFixed(1);
+                document.getElementById('elbowEquivDisplay').textContent = totalElbowEquiv.toFixed(1);
+                document.getElementById('totalLengthDisplay').textContent = effectiveLength.toFixed(1);
+            }
+            
+            // 末端壓力輸入事件
+            endPressureInput.addEventListener('input', function() {
+                updatePressureConversion(this.value);
+            });
+            
+            // 切換自訂C值輸入框
+            roughnessCoeff.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customCContainer.style.display = 'block';
+                } else {
+                    customCContainer.style.display = 'none';
+                }
+            });
+            
+            // 重置按鈕事件
+            resetBtn.addEventListener('click', function() {
+                document.getElementById('pipeDiameter').value = 65;
+                document.getElementById('diameterUnit').value = 'mm';
+                document.getElementById('straightLength').value = 50;
+                document.getElementById('elbow90').value = 2;
+                document.getElementById('elbow45').value = 0;
+                document.getElementById('tee').value = 0;
+                document.getElementById('valve').value = 0;
+                document.getElementById('endPressure').value = 0.5;
+                document.getElementById('flowRate').value = 550;
+                document.getElementById('heightDiff').value = 3;
+                document.getElementById('roughnessCoeff').value = 130;
+                document.getElementById('customCContainer').style.display = 'none';
+                
+                updateDiameterInfo();
+                updatePressureConversion(0.2);
+                updateEffectiveLengthDisplay();
+                resultsPanel.classList.remove('active');
+                
+                // 顯示成功重置訊息
+                showTempMessage('所有參數已重置為預設值', 'success');
+            });
+            
+            // 計算按鈕點擊事件
+            calculateBtn.addEventListener('click', function() {
+                // 顯示載入狀態
+                const originalText = calculateBtn.innerHTML;
+                calculateBtn.innerHTML = '<span class="loading"></span> 計算中...';
+                calculateBtn.disabled = true;
+                
+                // 模擬短暫計算時間
+                setTimeout(function() {
+                    calculateHydraulicParameters();
+                    calculateBtn.innerHTML = originalText;
+                    calculateBtn.disabled = false;
+                }, 500);
+            });
+            
+            // 主要計算函數
+            function calculateHydraulicParameters() {
+                // 獲取輸入值
+                const pipeDiameterInput = parseFloat(document.getElementById('pipeDiameter').value);
+                const diameterUnitVal = document.getElementById('diameterUnit').value;
+                const straightLength = parseFloat(document.getElementById('straightLength').value);
+                const endPressureMPa = parseFloat(document.getElementById('endPressure').value);
+                const flowRateLPM = parseFloat(document.getElementById('flowRate').value);
+                const heightDiff = parseFloat(document.getElementById('heightDiff').value);
+                
+                // 獲取彎頭數量
+                const elbow90Count = parseInt(document.getElementById('elbow90').value) || 0;
+                const elbow45Count = parseInt(document.getElementById('elbow45').value) || 0;
+                const teeCount = parseInt(document.getElementById('tee').value) || 0;
+                const valveCount = parseInt(document.getElementById('valve').value) || 0;
+                
+                // 獲取粗糙係數C值
+                let roughnessC;
+                if (roughnessCoeff.value === 'custom') {
+                    roughnessC = parseFloat(document.getElementById('customCValue').value);
+                } else {
+                    roughnessC = parseFloat(roughnessCoeff.value);
+                }
+                
+                // 檢查輸入值是否有效
+                if (isNaN(pipeDiameterInput) || isNaN(straightLength) || isNaN(endPressureMPa) || 
+                    isNaN(flowRateLPM) || isNaN(heightDiff) || isNaN(roughnessC)) {
+                    showTempMessage('請輸入有效的數值', 'warning');
+                    return;
+                }
+                
+                // 管徑單位轉換
+                let pipeDiameterMM;
+                if (diameterUnitVal === 'inch') {
+                    // 如果是吋，檢查是否有對應的標準值
+                    const inchValue = pipeDiameterInput.toString();
+                    if (inchToMM[inchValue]) {
+                        pipeDiameterMM = inchToMM[inchValue];
+                    } else {
+                        // 如果沒有對應值，使用一般換算 (1吋 = 25.4mm)
+                        pipeDiameterMM = pipeDiameterInput * 25.4;
+                    }
+                } else {
+                    // 如果是mm，直接使用
+                    pipeDiameterMM = pipeDiameterInput;
+                }
+                
+                const pipeDiameterM = pipeDiameterMM / 1000; // 轉為公尺
+                
+                // 計算彎頭等效長度
+                const elbow90Equiv = elbow90Count * elbowEquivalents.elbow90 * pipeDiameterM;
+                const elbow45Equiv = elbow45Count * elbowEquivalents.elbow45 * pipeDiameterM;
+                const teeEquiv = teeCount * elbowEquivalents.tee * pipeDiameterM;
+                const valveEquiv = valveCount * elbowEquivalents.valve * pipeDiameterM;
+                
+                // 總彎頭等效長度
+                const totalElbowEquiv = elbow90Equiv + elbow45Equiv + teeEquiv + valveEquiv;
+                
+                // 有效管長
+                const effectiveLength = straightLength + totalElbowEquiv;
+                
+                // 單位轉換
+                const flowRateM3S = (flowRateLPM / 1000) / 60; // L/min 轉 m³/s
+                const endPressureM = endPressureMPa * 101.972; // MPa 轉 公尺水柱
+                
+                // 1. 計算流速
+                const pipeArea = Math.PI * Math.pow(pipeDiameterM / 2, 2); // 管截面積 (m²)
+                const velocity = flowRateM3S / pipeArea; // 流速 (m/s)
+                
+                // 2. 計算摩擦損失 (哈森-威廉姆斯公式)
+                // hf = (10.67 * L * Q^1.85) / (C^1.85 * d^4.87)
+                const frictionLoss = (10.67 * effectiveLength * Math.pow(flowRateM3S, 1.85)) / 
+                                     (Math.pow(roughnessC, 1.85) * Math.pow(pipeDiameterM, 4.87));
+                
+                // 3. 計算所需入口壓力
+                const inletPressureM = endPressureM + frictionLoss + heightDiff; // 公尺水柱
+                const inletPressureMPa = inletPressureM / 101.972; // 公尺水柱 轉 MPa
+                
+                // 4. 計算水流到達時間
+                const travelTime = effectiveLength / velocity; // 秒
+                
+                // 5. 計算雷諾數 (判斷流態)
+                const kinematicViscosity = 1.004e-6; // 水的運動黏度 (m²/s) @ 20°C
+                const reynoldsNumber = (velocity * pipeDiameterM) / kinematicViscosity;
+                
+                // 顯示結果
+                document.getElementById('velocityResult').textContent = velocity.toFixed(3);
+                document.getElementById('frictionLossResult').textContent = frictionLoss.toFixed(2);
+                document.getElementById('inletPressureResult').textContent = inletPressureMPa.toFixed(3);
+                document.getElementById('inletPressureMResult').textContent = inletPressureM.toFixed(2);
+                document.getElementById('travelTimeResult').textContent = travelTime.toFixed(2);
+                document.getElementById('effectiveLengthResult').textContent = effectiveLength.toFixed(1);
+                document.getElementById('elbowEquivalentResult').textContent = totalElbowEquiv.toFixed(1);
+                document.getElementById('innerDiameterResult').textContent = pipeDiameterMM.toFixed(2);
+                
+                // 顯示結果區域
+                resultsPanel.classList.add('active');
+                
+                // 清空之前的訊息
+                resultsMessages.innerHTML = '';
+                
+                // 流速檢查與建議
+                let velocityMessage = '';
+                let velocityType = 'info';
+                
+                if (velocity > 5) {
+                    velocityMessage = '<i class="fas fa-exclamation-triangle"></i> <strong>警告：</strong>流速超過5 m/s，可能導致水錘、噪音和過大摩擦損失，建議增大管徑。';
+                    velocityType = 'warning';
+                } else if (velocity > 3) {
+                    velocityMessage = '<i class="fas fa-info-circle"></i> <strong>注意：</strong>流速超過3 m/s，屬於較高流速，請評估系統需求。';
+                    velocityType = 'warning';
+                } else if (velocity < 0.5) {
+                    velocityMessage = '<i class="fas fa-info-circle"></i> <strong>注意：</strong>流速偏低，可能影響滅火效果，或導致沉澱物累積。';
+                    velocityType = 'warning';
+                } else {
+                    velocityMessage = '<i class="fas fa-check-circle"></i> <strong>良好：</strong>流速在合理範圍內(0.5-3 m/s)。';
+                    velocityType = 'success';
+                }
+                
+                addMessage(velocityMessage, velocityType);
+                
+                // 水流到達時間資訊
+                let travelTimeMessage = '';
+                let travelTimeType = 'info';
+                
+                if (travelTime < 1) {
+                    travelTimeMessage = `<i class="fas fa-bolt"></i> <strong>迅速：</strong>水流從入口到末端需時${travelTime.toFixed(2)}秒，反應迅速。`;
+                    travelTimeType = 'success';
+                } else if (travelTime < 5) {
+                    travelTimeMessage = `<i class="fas fa-check-circle"></i> <strong>合理：</strong>水流從入口到末端需時${travelTime.toFixed(2)}秒，反應時間合理。`;
+                    travelTimeType = 'info';
+                } else if (travelTime < 10) {
+                    travelTimeMessage = `<i class="fas fa-info-circle"></i> <strong>注意：</strong>水流從入口到末端需時${travelTime.toFixed(2)}秒，請確認系統響應時間要求。`;
+                    travelTimeType = 'warning';
+                } else {
+                    travelTimeMessage = `<i class="fas fa-exclamation-triangle"></i> <strong>警告：</strong>水流從入口到末端需時${travelTime.toFixed(2)}秒，反應時間可能過長，建議檢討管徑或管長。`;
+                    travelTimeType = 'warning';
+                }
+                
+                addMessage(travelTimeMessage, travelTimeType);
+                
+                // 彎頭等效長度資訊
+                const elbowDetail = [];
+                if (elbow90Count > 0) elbowDetail.push(`${elbow90Count}個90°彎頭`);
+                if (elbow45Count > 0) elbowDetail.push(`${elbow45Count}個45°彎頭`);
+                if (teeCount > 0) elbowDetail.push(`${teeCount}個T型三通`);
+                if (valveCount > 0) elbowDetail.push(`${valveCount}個閥門`);
+                
+                if (elbowDetail.length > 0) {
+                    const elbowMessage = `<i class="fas fa-bend"></i> <strong>彎頭等效長度：</strong>${elbowDetail.join('、')}，總等效長度${totalElbowEquiv.toFixed(1)}m。`;
+                    addMessage(elbowMessage, 'info');
+                }
+                
+                // 有效管長資訊
+                const lengthMessage = `<i class="fas fa-ruler-combined"></i> <strong>有效管長：</strong>直管${straightLength}m + 彎頭等效${totalElbowEquiv.toFixed(1)}m = ${effectiveLength.toFixed(1)}m。`;
+                addMessage(lengthMessage, 'info');
+                
+                // 雷諾數資訊
+                let flowRegime = '';
+                if (reynoldsNumber < 2000) {
+                    flowRegime = '層流';
+                } else if (reynoldsNumber < 4000) {
+                    flowRegime = '過渡流';
+                } else {
+                    flowRegime = '紊流';
+                }
+                
+                const reynoldsMessage = `<i class="fas fa-water"></i> <strong>流態分析：</strong>雷諾數 Re = ${reynoldsNumber.toFixed(0)}，屬於${flowRegime}。`;
+                addMessage(reynoldsMessage, 'info');
+                
+                // 壓力分析
+                const pressureRatio = (inletPressureMPa / endPressureMPa).toFixed(2);
+                const pressureMessage = `<i class="fas fa-tachometer-alt"></i> <strong>壓力分析：</strong>入口壓力需為末端壓力的${pressureRatio}倍。`;
+                addMessage(pressureMessage, 'info');
+                
+                // 滾動到結果區域
+                resultsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            
+            // 新增訊息到結果區域
+            function addMessage(message, type) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `alert alert-${type}`;
+                messageDiv.innerHTML = message;
+                resultsMessages.appendChild(messageDiv);
+            }
+            
+            // 顯示臨時訊息
+            function showTempMessage(message, type) {
+                const tempDiv = document.createElement('div');
+                tempDiv.className = `alert alert-${type}`;
+                tempDiv.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+                tempDiv.style.position = 'fixed';
+                tempDiv.style.top = '20px';
+                tempDiv.style.right = '20px';
+                tempDiv.style.zIndex = '1000';
+                tempDiv.style.maxWidth = '300px';
+                tempDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                
+                document.body.appendChild(tempDiv);
+                
+                // 3秒後移除
+                setTimeout(() => {
+                    tempDiv.style.transition = 'opacity 0.5s';
+                    tempDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        if (tempDiv.parentNode) {
+                            tempDiv.parentNode.removeChild(tempDiv);
+                        }
+                    }, 500);
+                }, 3000);
+            }
+            
+            // 初始更新
+            updateDiameterInfo();
+            updatePressureConversion(endPressureInput.value);
+            updateEffectiveLengthDisplay();
+        });
+    </script>
+			    <!-- 返回按鈕應該在這裡 -->
+    <button onclick="window.location.href='index.html'" 
+            style="position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; background: #4a6fa5; color: white; border: none; border-radius: 5px; cursor: pointer; z-index: 9999;">
+        返回主選單
+    </button>		
+	
+</body>
+</html>

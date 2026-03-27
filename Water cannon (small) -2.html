@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 噴頭滅火模擬器 (側牆安裝簡化版)</title>
+    <style>
+        body { 
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+        }
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 100;
+            width: 300px;
+        }
+        .btn {
+            padding: 8px 15px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            margin-right: 5px;
+        }
+        #reset-btn {
+            background: #f44336;
+        }
+        #reset-btn:hover {
+            background: #da190b;
+        }
+        #height-display {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 100;
+            font-size: 14px;
+        }
+        #fire-count {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        #detector-data {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .alarm-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            background-color: #ccc;
+            vertical-align: middle;
+        }
+        .alarm-active {
+            animation: blink 0.5s infinite alternate;
+        }
+        @keyframes blink {
+            from { background-color: #ccc; }
+            to { background-color: #ff0000; }
+        }
+        #log-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 100;
+            font-size: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        .log-entry {
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .log-time {
+            font-weight: bold;
+            color: #555;
+        }
+        .log-event {
+            color: #333;
+        }
+        .log-warning {
+            color: #e67e22;
+        }
+        .log-alarm {
+            color: #e74c3c;
+        }
+        .log-extinguish {
+            color: #3498db;
+        }
+        .language-selector {
+            margin-bottom: 10px;
+        }
+        .language-selector select {
+            width: 100%;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        #countdown-timer {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 4px;
+            font-family: monospace;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            display: none;
+        }
+        .countdown-active {
+            animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+            from { background-color: rgba(255, 0, 0, 0.2); }
+            to { background-color: rgba(255, 0, 0, 0.4); }
+        }
+    </style>
+</head>
+<body>
+<div class="version-info">Ver.2 2025/6/6 -  HTBO/Jim</div>
+    <div id="container">
+        <div id="controls">
+            <div class="language-selector">
+                <label for="language-select">語言 / Language / 言語:</label>
+                <select id="language-select">
+                    <option value="en">English</option>
+                    <option value="zh">中文</option>
+                    <option value="ja">日本語</option>
+                </select>
+            </div>
+            
+            <label for="height-slider" id="height-label">噴頭高度 (4-15m):</label>
+            <input type="range" id="height-slider" min="4" max="15" step="0.1" value="10">
+            <div id="height-display">當前高度: 10.0m</div>
+            
+            <label for="delay-slider" id="delay-label">放水延遲 (0-60秒):</label>
+            <input type="range" id="delay-slider" min="0" max="60" step="1" value="0">
+            <div id="delay-display">放水延遲: 0秒</div>
+            
+            <div id="countdown-timer">
+                放水倒數: <span id="countdown-value">0</span>秒
+            </div>
+            
+            <button id="reset-btn" class="btn">復歸</button>
+            <div id="fire-count">火點數量: 0</div>
+            <div id="detector-data">
+                <span class="alarm-indicator"></span> <span id="detector-status">探測器狀態: 監視中</span><br>
+                <span id="nearest-fire">最近火點: 無</span>
+            </div>
+        </div>
+        <div id="log-container">
+            <h3 id="log-title">系統履歷</h3>
+            <div id="log-entries"></div>
+        </div>
+        <div id="instructions">
+            右鍵點擊地面放置火點 | 使用滑鼠拖動旋轉視角 | 滾輪縮放 | 拖動滑桿調整噴頭高度
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+
+    <script>
+        // 多語言支持
+        const translations = {
+            en: {
+                heightLabel: "Nozzle Height (4-15m):",
+                heightDisplay: "Current Height: ",
+                delayLabel: "Water Discharge Delay (0-60s):",
+                delayDisplay: "Discharge Delay: ",
+                countdownText: "Discharge Countdown: ",
+                resetBtn: "Reset",
+                fireCount: "Fire Points: ",
+                detectorStatus: "Detector Status: ",
+                nearestFire: "Nearest Fire: ",
+                monitoring: "Monitoring",
+                alarm: "Alarm",
+                extinguishing: "Extinguishing",
+                none: "None",
+                logTitle: "System Log",
+                instructions: "Right-click ground to place fire points | Drag mouse to rotate view | Scroll to zoom | Drag slider to adjust nozzle height",
+                systemStart: "System started, entering monitoring state",
+                heightAdjusted: "Nozzle height adjusted to ",
+                systemReset: "System reset",
+                fireAdded: "Fire point added at ",
+                fireDetected: "Fire detected at ",
+                alarmActivated: ", alarm activated",
+                extinguishingFire: "Extinguishing fire at ",
+                fireExtinguished: "Fire extinguished at ",
+                allFiresExtinguished: "All fires extinguished, system returning to monitoring state",
+                unitM: "m",
+                unitS: "s"
+            },
+            zh: {
+                heightLabel: "噴頭高度 (4-15m):",
+                heightDisplay: "當前高度: ",
+                delayLabel: "放水延遲 (0-60秒):",
+                delayDisplay: "放水延遲: ",
+                countdownText: "放水倒數: ",
+                resetBtn: "復歸",
+                fireCount: "火點數量: ",
+                detectorStatus: "探測器狀態: ",
+                nearestFire: "最近火點: ",
+                monitoring: "監視中",
+                alarm: "警報中",
+                extinguishing: "滅火中",
+                none: "無",
+                logTitle: "系統履歷",
+                instructions: "右鍵點擊地面放置火點 | 使用滑鼠拖動旋轉視角 | 滾輪縮放 | 拖動滑桿調整噴頭高度",
+                systemStart: "系統啟動完成，進入監視狀態",
+                heightAdjusted: "噴頭高度調整為 ",
+                systemReset: "系統已復歸",
+                fireAdded: "新增火點於 ",
+                fireDetected: "偵測到火點於 ",
+                alarmActivated: "，警報啟動",
+                extinguishingFire: "開始對火點 ",
+                fireExtinguished: "火點 ",
+                allFiresExtinguished: "所有火點已撲滅，系統恢復監視狀態",
+                unitM: "m",
+                unitS: "秒"
+            },
+            ja: {
+                heightLabel: "ノズル高さ (4-15m):",
+                heightDisplay: "現在の高さ: ",
+                delayLabel: "放水遅延 (0-60秒):",
+                delayDisplay: "放水遅延: ",
+                countdownText: "放水カウントダウン: ",
+                resetBtn: "リセット",
+                fireCount: "火点の数: ",
+                detectorStatus: "検出器状態: ",
+                nearestFire: "最寄りの火点: ",
+                monitoring: "監視中",
+                alarm: "警報中",
+                extinguishing: "消火中",
+                none: "なし",
+                logTitle: "システム履歴",
+                instructions: "地面を右クリックして火点を設置 | マウスドラッグで視点回転 | スクロールでズーム | スライダーでノズル高さ調整",
+                systemStart: "システム起動完了、監視状態に入る",
+                heightAdjusted: "ノズル高さを調整 ",
+                systemReset: "システムをリセット",
+                fireAdded: "火点を追加 ",
+                fireDetected: "火点を検出 ",
+                alarmActivated: "、警報を起動",
+                extinguishingFire: "火点の消火を開始 ",
+                fireExtinguished: "火点を消火 ",
+                allFiresExtinguished: "すべての火点が消火され、システムが監視状態に戻る",
+                unitM: "m",
+                unitS: "秒"
+            }
+        };
+
+        // 當前語言
+        let currentLanguage = 'en';
+        
+        // 更新界面語言
+        function updateLanguage() {
+            const t = translations[currentLanguage];
+            
+            document.getElementById('height-label').textContent = t.heightLabel;
+            document.getElementById('delay-label').textContent = t.delayLabel;
+            document.getElementById('reset-btn').textContent = t.resetBtn;
+            document.getElementById('log-title').textContent = t.logTitle;
+            document.getElementById('instructions').textContent = t.instructions;
+            document.getElementById('countdown-timer').innerHTML = t.countdownText + '<span id="countdown-value">0</span>' + t.unitS;
+            
+            // 更新高度顯示
+            const height = parseFloat(document.getElementById('height-slider').value);
+            document.getElementById('height-display').textContent = t.heightDisplay + height.toFixed(1) + t.unitM;
+            
+            // 更新延遲顯示
+            const delay = parseFloat(document.getElementById('delay-slider').value);
+            document.getElementById('delay-display').textContent = t.delayDisplay + delay + t.unitS;
+            
+            // 更新火點數量
+            document.getElementById('fire-count').textContent = t.fireCount + firePoints.length;
+            
+            // 更新探測器狀態
+            updateDetectorData();
+        }
+
+        // 語言選擇事件
+        document.getElementById('language-select').addEventListener('change', function() {
+            currentLanguage = this.value;
+            updateLanguage();
+        });
+
+        // 初始化場景、相機和渲染器
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0xf0f0f0);
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        // 添加軌道控制
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // 設置相機位置
+        camera.position.set(20, 10, 20);
+        controls.update();
+
+        // 添加光源
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(10, 20, 10);
+        scene.add(directionalLight);
+
+        // 創建地面
+        const groundGeometry = new THREE.PlaneGeometry(30, 30);
+        const groundMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x3a5f0b,
+            side: THREE.DoubleSide,
+            roughness: 0.8,
+            metalness: 0.2
+        });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.5;
+        scene.add(ground);
+
+        // 創建牆壁 (20m高)
+        const wallGeometry = new THREE.PlaneGeometry(30, 20);
+        const wallMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x888888,
+            side: THREE.DoubleSide,
+            roughness: 0.7,
+            metalness: 0.3
+        });
+        const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+        wall.rotation.y = Math.PI / 2;
+        wall.position.set(-15, 9.5, 0);
+        scene.add(wall);
+
+        // 添加網格輔助
+        const gridHelper = new THREE.GridHelper(30, 30);
+        scene.add(gridHelper);
+
+        // 創建噴頭 (側牆安裝)
+        const nozzleGeometry = new THREE.SphereGeometry(0.3, 32, 32);
+        const nozzleMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x4682b4,
+            roughness: 0.4,
+            metalness: 0.7
+        });
+        const nozzle = new THREE.Mesh(nozzleGeometry, nozzleMaterial);
+        nozzle.position.set(-14.8, 10, 0);
+        scene.add(nozzle);
+
+        // 創建探測器 (噴頭旁邊)
+        const detectorGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+        const detectorMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const detector = new THREE.Mesh(detectorGeometry, detectorMaterial);
+        detector.position.set(-14.8, 10.3, 0.5);
+        scene.add(detector);
+
+        // 火點相關變量
+        let firePoints = [];
+        const fireGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+        const fireMaterial = new THREE.MeshBasicMaterial({ color: 0xff4500 });
+        const fireCountDisplay = document.getElementById('fire-count');
+        const detectorDataDisplay = document.getElementById('detector-data');
+        const alarmIndicator = document.querySelector('.alarm-indicator');
+        let currentTargetFire = null;
+        let sprayStartTime = 0;
+        const sprayDuration = 3000;
+        let isSpraying = false;
+        let isAlarming = false;
+        let alarmStartTime = 0;
+        let alarmDuration = 0; // 將在後面根據延遲設置調整
+        let targetRotation = { y: 0, z: Math.PI/2 };
+        let alarmInterval = null;
+        let countdownInterval = null;
+
+        // 創建水粒子系統
+        const waterParticles = [];
+        const waterGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+        const waterMaterial = new THREE.MeshBasicMaterial({ color: 0x1E90FF, transparent: true, opacity: 0.7 });
+
+        // 高度滑桿控制
+        const heightSlider = document.getElementById('height-slider');
+        const heightDisplay = document.getElementById('height-display');
+        
+        heightSlider.addEventListener('input', function() {
+            const height = parseFloat(this.value);
+            nozzle.position.y = height;
+            detector.position.y = height + 0.3;
+            heightDisplay.textContent = translations[currentLanguage].heightDisplay + height.toFixed(1) + translations[currentLanguage].unitM;
+            // 移除高度調整的履歷記錄
+        });
+
+        // 延遲滑桿控制
+        const delaySlider = document.getElementById('delay-slider');
+        const delayDisplay = document.getElementById('delay-display');
+        
+        delaySlider.addEventListener('input', function() {
+            const delay = parseFloat(this.value);
+            delayDisplay.textContent = translations[currentLanguage].delayDisplay + delay + translations[currentLanguage].unitS;
+            // 更新警報持續時間（延遲 + 3秒噴水）
+            alarmDuration = delay * 1000;
+            // 移除延遲調整的履歷記錄
+        });
+
+        // 復歸按鈕控制
+        const resetBtn = document.getElementById('reset-btn');
+        resetBtn.addEventListener('click', function() {
+            // 停止所有動作
+            isAlarming = false;
+            isSpraying = false;
+            currentTargetFire = null;
+            
+            // 清除警報閃爍
+            if (alarmInterval) {
+                clearInterval(alarmInterval);
+                alarmInterval = null;
+            }
+            
+            // 清除倒數計時器
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            
+            // 隱藏倒數計時器
+            const countdownTimer = document.getElementById('countdown-timer');
+            countdownTimer.style.display = 'none';
+            countdownTimer.classList.remove('countdown-active');
+            
+            alarmIndicator.classList.remove('alarm-active');
+            detector.material.color.setHex(0xff0000);
+            
+            // 清除所有火點
+            firePoints.forEach(fire => {
+                scene.remove(fire);
+            });
+            firePoints = [];
+            fireCountDisplay.textContent = translations[currentLanguage].fireCount + '0';
+            
+            // 清除所有水粒子
+            waterParticles.forEach(particle => {
+                scene.remove(particle);
+            });
+            waterParticles.length = 0;
+            
+            // 重置噴頭方向
+            nozzle.rotation.y = 0;
+            nozzle.rotation.z = Math.PI/2;
+            targetRotation.y = 0;
+            targetRotation.z = Math.PI/2;
+            
+            updateDetectorData();
+            addLogEntry(translations[currentLanguage].systemReset, "normal");
+        });
+
+        // 添加履歷記錄
+        function addLogEntry(message, type = "normal") {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            const dateString = now.toLocaleDateString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry`;
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'log-time';
+            timeSpan.textContent = `${dateString} ${timeString}`;
+            
+            const eventSpan = document.createElement('span');
+            eventSpan.className = `log-event log-${type}`;
+            eventSpan.textContent = message;
+            
+            logEntry.appendChild(timeSpan);
+            logEntry.appendChild(document.createElement('br'));
+            logEntry.appendChild(eventSpan);
+            
+            const logEntries = document.getElementById('log-entries');
+            logEntries.insertBefore(logEntry, logEntries.firstChild);
+            
+            // 限制履歷條目數量
+            if (logEntries.children.length > 100) {
+                logEntries.removeChild(logEntries.lastChild);
+            }
+        }
+
+        // 更新探測器數據顯示
+        function updateDetectorData(status, nearestFire) {
+            const t = translations[currentLanguage];
+            let statusText = status || t.monitoring;
+            let fireText = nearestFire || t.none;
+            
+            if (status === undefined && firePoints.length > 0) {
+                statusText = t.monitoring;
+                if (currentTargetFire) {
+                    fireText = `(${currentTargetFire.position.x.toFixed(1)}, ${currentTargetFire.position.z.toFixed(1)})`;
+                } else {
+                    const nearest = findNearestFire();
+                    if (nearest) {
+                        fireText = `(${nearest.position.x.toFixed(1)}, ${nearest.position.z.toFixed(1)})`;
+                    }
+                }
+            }
+            
+            document.getElementById('detector-status').textContent = t.detectorStatus + statusText;
+            document.getElementById('nearest-fire').textContent = t.nearestFire + fireText;
+            
+            // 更新警報指示器
+            const indicator = detectorDataDisplay.querySelector('.alarm-indicator');
+            if (status === t.alarm) {
+                indicator.classList.add('alarm-active');
+            } else {
+                indicator.classList.remove('alarm-active');
+            }
+        }
+
+        // 右鍵點擊地面放置火點
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        
+        function handleRightClick(event) {
+            event.preventDefault();
+            
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(ground);
+            
+            if (intersects.length > 0) {
+                const point = intersects[0].point;
+                
+                // 允許在地面任意位置放置火點
+                const firePoint = new THREE.Mesh(fireGeometry, fireMaterial);
+                firePoint.position.set(point.x, 0.5, point.z);
+                scene.add(firePoint);
+                firePoints.push(firePoint);
+                
+                fireCountDisplay.textContent = translations[currentLanguage].fireCount + firePoints.length;
+                updateDetectorData();
+                
+                addLogEntry(translations[currentLanguage].fireAdded + `(${point.x.toFixed(1)}, ${point.z.toFixed(1)})`, "warning");
+            }
+        }
+        
+        document.addEventListener('contextmenu', handleRightClick);
+
+        // 找到最近的火點
+        function findNearestFire() {
+            if (firePoints.length === 0) return null;
+            
+            let nearest = null;
+            let minDistance = Infinity;
+            
+            for (const fire of firePoints) {
+                const distance = fire.position.distanceTo(nozzle.position);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearest = fire;
+                }
+            }
+            
+            return nearest;
+        }
+
+        // 開始警報流程
+        function startAlarm(fire) {
+            if (isAlarming || isSpraying) return;
+            
+            isAlarming = true;
+            alarmStartTime = Date.now();
+            currentTargetFire = fire;
+            updateDetectorData(translations[currentLanguage].alarm, `(${fire.position.x.toFixed(1)}, ${fire.position.z.toFixed(1)})`);
+            
+            // 顯示倒數計時器
+            const countdownTimer = document.getElementById('countdown-timer');
+            countdownTimer.style.display = 'block';
+            countdownTimer.classList.add('countdown-active');
+            
+            // 警報效果：探測器閃爍
+            if (alarmInterval) {
+                clearInterval(alarmInterval);
+            }
+            alarmInterval = setInterval(() => {
+                if (!isAlarming) {
+                    clearInterval(alarmInterval);
+                    detector.material.color.setHex(0xff0000);
+                    return;
+                }
+                detector.material.color.setHex(Date.now() % 500 < 250 ? 0xff0000 : 0x990000);
+            }, 100);
+            
+            // 開始倒數計時
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            const delay = parseFloat(delaySlider.value);
+            let remainingTime = delay;
+            
+            countdownInterval = setInterval(() => {
+                remainingTime -= 1;
+                document.getElementById('countdown-value').textContent = remainingTime;
+                
+                if (remainingTime <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownTimer.style.display = 'none';
+                    countdownTimer.classList.remove('countdown-active');
+                    
+                    // 倒數到0時立即開始噴水
+                    isAlarming = false;
+                    clearInterval(alarmInterval);
+                    alarmInterval = null;
+                    detector.material.color.setHex(0xff0000);
+                    
+                    // 檢查目標火點是否仍然存在
+                    if (currentTargetFire && firePoints.includes(currentTargetFire)) {
+                        startSpraying(currentTargetFire);
+                    } else {
+                        // 如果火點已消失，重新尋找最近的火點
+                        const nextFire = findNearestFire();
+                        if (nextFire) {
+                            startAlarm(nextFire);
+                        } else {
+                            updateDetectorData();
+                        }
+                    }
+                }
+            }, 1000);
+            
+            addLogEntry(translations[currentLanguage].fireDetected + `(${fire.position.x.toFixed(1)}, ${fire.position.z.toFixed(1)})` + translations[currentLanguage].alarmActivated, "alarm");
+        }
+
+        // 開始噴水流程
+        function startSpraying(fire) {
+            if (!fire || !firePoints.includes(fire)) {
+                // 如果火點不存在，重新尋找
+                const nextFire = findNearestFire();
+                if (nextFire) {
+                    startAlarm(nextFire);
+                } else {
+                    updateDetectorData();
+                }
+                return;
+            }
+            
+            isSpraying = true;
+            currentTargetFire = fire;
+            sprayStartTime = Date.now();
+            calculateNozzleDirection();
+            updateDetectorData(translations[currentLanguage].extinguishing, `(${fire.position.x.toFixed(1)}, ${fire.position.z.toFixed(1)})`);
+            
+            addLogEntry(translations[currentLanguage].extinguishingFire + `(${fire.position.x.toFixed(1)}, ${fire.position.z.toFixed(1)})`, "extinguish");
+        }
+
+        // 計算噴頭方向 (自動指向當前目標火點)
+        function calculateNozzleDirection() {
+            if (!currentTargetFire) return;
+            
+            const dx = currentTargetFire.position.x - nozzle.position.x;
+            const dz = currentTargetFire.position.z - nozzle.position.z;
+            
+            // 計算旋轉角度
+            targetRotation.y = Math.atan2(dz, dx);
+        }
+
+        // 計算拋物線初速度
+        function calculateInitialVelocity(startPos, targetPos, height) {
+            const dx = targetPos.x - startPos.x;
+            const dz = targetPos.z - startPos.z;
+            const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
+            
+            const g = 0.0035;
+            const time = Math.sqrt(2 * height / g) * 0.8;
+            
+            const vx = dx / time;
+            const vz = dz / time;
+            const vy = (height + 0.5 * g * time * time) / time;
+            
+            return new THREE.Vector3(vx, vy, vz);
+        }
+
+        // 動畫循環
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            
+            // 更新探測器位置
+            detector.position.x = nozzle.position.x;
+            detector.position.y = nozzle.position.y + 0.3;
+            
+            // 常時監視模式
+            if (!isAlarming && !isSpraying && firePoints.length > 0) {
+                const nearestFire = findNearestFire();
+                if (nearestFire && nearestFire !== currentTargetFire) {
+                    startAlarm(nearestFire);
+                }
+            }
+            
+            // 噴水處理
+            if (isSpraying && currentTargetFire) {
+                // 確保目標火點仍然存在
+                if (!firePoints.includes(currentTargetFire)) {
+                    isSpraying = false;
+                    
+                    const nextFire = findNearestFire();
+                    if (nextFire) {
+                        startAlarm(nextFire);
+                    } else {
+                        updateDetectorData();
+                    }
+                    return;
+                }
+                
+                // 檢查是否需要移除當前火點 (噴水3秒後)
+                if (Date.now() - sprayStartTime > sprayDuration) {
+                    scene.remove(currentTargetFire);
+                    firePoints = firePoints.filter(f => f !== currentTargetFire);
+                    fireCountDisplay.textContent = translations[currentLanguage].fireCount + firePoints.length;
+                    
+                    addLogEntry(translations[currentLanguage].fireExtinguished + `(${currentTargetFire.position.x.toFixed(1)}, ${currentTargetFire.position.z.toFixed(1)})`, "extinguish");
+                    
+                    if (firePoints.length > 0) {
+                        // 直接開始下一個警報
+                        const nextFire = findNearestFire();
+                        startAlarm(nextFire);
+                    } else {
+                        // 沒有更多火點，停止噴水
+                        isSpraying = false;
+                        currentTargetFire = null;
+                        updateDetectorData();
+                        addLogEntry(translations[currentLanguage].allFiresExtinguished, "normal");
+                    }
+                }
+                
+                // 噴水效果 - 改進為覆蓋火點前後5m範圍
+                for (let i = 0; i < 5; i++) {
+                    if (Math.random() > 0.2) {
+                        const waterDrop = new THREE.Mesh(waterGeometry, waterMaterial);
+                        waterDrop.position.copy(nozzle.position);
+                        
+                        // 計算目標位置 - 主目標或周圍5m範圍內的隨機點
+                        let targetPos;
+                        if (Math.random() < 0.7) {
+                            // 70%的水瞄準主火點
+                            targetPos = currentTargetFire.position.clone();
+                        } else {
+                            // 30%的水瞄準周圍5m範圍
+                            const angle = Math.random() * Math.PI * 2;
+                            const radius = Math.random() * 5;
+                            targetPos = currentTargetFire.position.clone();
+                            targetPos.x += Math.cos(angle) * radius;
+                            targetPos.z += Math.sin(angle) * radius;
+                        }
+                        
+                        const initialVelocity = calculateInitialVelocity(
+                            waterDrop.position,
+                            targetPos,
+                            nozzle.position.y
+                        );
+                        
+                        // 添加隨機散射效果
+                        initialVelocity.x += (Math.random() - 0.5) * 0.1;
+                        initialVelocity.z += (Math.random() - 0.5) * 0.1;
+                        
+                        waterDrop.userData = {
+                            velocity: initialVelocity,
+                            gravity: -0.015,
+                            life: 150 + Math.random() * 50
+                        };
+                        
+                        scene.add(waterDrop);
+                        waterParticles.push(waterDrop);
+                    }
+                }
+            }
+            
+            // 更新噴頭旋轉
+            if (currentTargetFire) {
+                const rotationSpeed = 0.05;
+                nozzle.rotation.y += (targetRotation.y - nozzle.rotation.y) * rotationSpeed;
+                nozzle.rotation.z = Math.PI/2; // 固定z軸旋轉
+            }
+            
+            // 更新水粒子
+            for (let i = waterParticles.length - 1; i >= 0; i--) {
+                const particle = waterParticles[i];
+                
+                particle.position.x += particle.userData.velocity.x;
+                particle.position.y += particle.userData.velocity.y;
+                particle.position.z += particle.userData.velocity.z;
+                
+                particle.userData.velocity.y += particle.userData.gravity;
+                particle.userData.life--;
+                
+                // 檢查是否接近任何火點 (不僅僅是當前目標)
+                for (const fire of firePoints) {
+                    if (particle.position.distanceTo(fire.position) < 1.5) {
+                        particle.userData.velocity.multiplyScalar(0.95);
+                        particle.userData.velocity.x += (Math.random() - 0.5) * 0.02;
+                        particle.userData.velocity.z += (Math.random() - 0.5) * 0.02;
+                        break;
+                    }
+                }
+                
+                if (particle.userData.life <= 0 || particle.position.y <= 0) {
+                    scene.remove(particle);
+                    waterParticles.splice(i, 1);
+                }
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        // 處理窗口大小變化
+        window.addEventListener('resize', function() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // 初始狀態
+        updateLanguage();
+        updateDetectorData();
+        addLogEntry(translations[currentLanguage].systemStart, "normal");
+        animate();
+    </script>
+	
+			    <!-- 返回按鈕應該在這裡 -->
+    <button onclick="window.location.href='index.html'" 
+            style="position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; background: #4a6fa5; color: white; border: none; border-radius: 5px; cursor: pointer; z-index: 9999;">
+        返回主選單
+    </button>	
+	
+	
+</body>
+</html>

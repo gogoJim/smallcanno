@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title> 小規模配線</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #e9ecef;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            line-height: 1.4;
+            color: #1e2a3e;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pdf-container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pdf-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2b4c7c 100%);
+            padding: 1.2rem 2rem;
+            color: white;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .title-section h1 {
+            font-weight: 600;
+            font-size: 1.7rem;
+            letter-spacing: -0.3px;
+        }
+
+        .title-section p {
+            font-size: 0.85rem;
+            opacity: 0.85;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .file-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .status-area {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 48px;
+            padding: 0.3rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .status-dot.success {
+            background-color: #2ecc71;
+            box-shadow: 0 0 6px #2ecc71;
+        }
+
+        .status-dot.error {
+            background-color: #e74c3c;
+        }
+
+        .toolbar {
+            background: #f8fafc;
+            padding: 12px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .info-message {
+            font-size: 0.8rem;
+            color: #4b6a8b;
+            background: #ecf3f9;
+            padding: 5px 14px;
+            border-radius: 30px;
+        }
+
+        .download-btn {
+            background: white;
+            border: 1px solid #bdd3e8;
+            padding: 6px 18px;
+            border-radius: 40px;
+            text-decoration: none;
+            color: #1e4663;
+            font-weight: 500;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .download-btn:hover {
+            background: #eef3fc;
+            border-color: #1e4663;
+        }
+
+        /* PDF 檢視區域 - 使用原生 iframe */
+        .pdf-viewer-area {
+            background: #525659;
+            min-height: 75vh;
+            position: relative;
+        }
+
+        .pdf-iframe {
+            width: 100%;
+            height: 85vh;
+            border: none;
+            display: block;
+            background: #525659;
+        }
+
+        .error-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 85vh;
+            background: #f8f9fa;
+        }
+
+        .error-message {
+            background: #fff0f0;
+            border-left: 6px solid #e74c3c;
+            padding: 2rem;
+            margin: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            color: #a82313;
+            max-width: 500px;
+        }
+
+        .error-message button {
+            margin-top: 16px;
+            padding: 8px 24px;
+            background: #1e4663;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .fallback-section {
+            background: #f1f5f9;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .fallback-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 24px;
+            background: #1e4663;
+            color: white;
+            text-decoration: none;
+            border-radius: 40px;
+            font-weight: 500;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.7rem;
+            color: #5f7f9e;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 12px;
+            }
+            .pdf-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .pdf-iframe {
+                height: 70vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="pdf-container">
+    <div class="pdf-header">
+        <div class="title-section">
+            <h1>📘 小規模配線</h1>
+            <p>
+                               
+				<a id="downloadLink"  download="小規模配線.pdf" href="#"></a>
+            </p>
+        </div>
+        <div class="status-area" id="statusArea">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">偵測檔案中...</span>
+        </div>
+    </div>
+
+
+    <!-- PDF 原生嵌入區域 -->
+    <div class="pdf-viewer-area" id="pdfViewerArea">
+        <iframe id="pdfIframe" class="pdf-iframe" title="小規模配線"></iframe>
+    </div>
+    
+    <div class="fallback-section">
+        <span>📄 無法在線預覽？</span>
+        <a id="fallbackDownloadLink" class="fallback-link" href="#">⬇️ 直接下載 PDF 檔案後使用本機閱讀器開啟</a>
+    </div>
+</div>
+<footer>
+    💡 HTBO/Jim 2026/3/27
+</footer>
+
+<script>
+    (function() {
+        // PDF 檔案路徑
+        const PDF_PATH = "images/小規模配線.pdf";
+        
+        // DOM 元素
+        const pdfIframe = document.getElementById("pdfIframe");
+        const statusDot = document.getElementById("statusDot");
+        const statusTextSpan = document.getElementById("statusText");
+        const downloadLink = document.getElementById("downloadLink");
+        const fallbackDownloadLink = document.getElementById("fallbackDownloadLink");
+        
+        // 更新狀態顯示
+        function setStatus(type, message) {
+            statusTextSpan.innerText = message;
+            statusDot.className = "status-dot";
+            if (type === 'success') {
+                statusDot.classList.add('success');
+            } else if (type === 'error') {
+                statusDot.classList.add('error');
+            }
+        }
+
+        
+        // 載入 PDF（使用原生 iframe）
+        function loadPDF() {
+            setStatus('success', '載入中...');
+            
+            // 先檢查檔案是否存在
+            fetch(PDF_PATH, { method: 'HEAD', cache: 'no-cache' })
+                .then(response => {
+                    if (response.ok) {
+                        // 檔案存在，設置 iframe 的 src
+                        // 加入時間戳避免快取問題
+                        const fileUrl = PDF_PATH + "?t=" + Date.now();
+                        pdfIframe.src = fileUrl;
+                        setStatus('success', '已載入 PDF 檢視器');
+                        
+                        // 監聽 iframe 載入事件，檢測是否成功顯示
+                        pdfIframe.onload = () => {
+                            // 由於跨域限制，無法直接檢測 iframe 內容
+                            // 但可以設定一個延遲檢查，如果顯示錯誤頁面則提示
+                            setTimeout(() => {
+                                try {
+                                    // 嘗試訪問 iframe 內容，如果跨域會拋錯，但這是正常的
+                                    // 如果檔案成功載入，通常不會拋錯
+                                    const iframeDoc = pdfIframe.contentDocument || pdfIframe.contentWindow.document;
+                                    if (iframeDoc && iframeDoc.body) {
+                                        const bodyText = iframeDoc.body.innerText || "";
+                                        // 檢查是否為瀏覽器錯誤頁面
+                                        if (bodyText.includes("404") || bodyText.includes("找不到") || 
+                                            bodyText.includes("Not Found") || bodyText.includes("無法載入")) {
+                                            showErrorInIframe(
+                                                "瀏覽器無法載入 PDF 檔案",
+                                                "檔案可能不存在或路徑不正確。請確認「images」資料夾中有「GD-101使用說明書.pdf」。"
+                                            );
+                                            setStatus('error', '檔案不存在');
+                                        }
+                                    }
+                                } catch (e) {
+                                    // 跨域訪問被阻止，這是正常情況（PDF 成功載入時通常會有跨域限制）
+                                    // 這種情況下假設載入成功
+                                    console.log("PDF 已成功載入（跨域限制正常）");
+                                }
+                            }, 500);
+                        };
+                    } else {
+                        // 檔案不存在
+                        showErrorInIframe(
+                            `HTTP ${response.status} - 檔案不存在`,
+                            `請確認「images」資料夾中存在「GD-101使用說明書.pdf」檔案。\n\n下載功能正常表示檔案存在，可能是路徑大小寫問題。`
+                        );
+                        setStatus('error', '檔案不存在');
+                    }
+                })
+                .catch(error => {
+                    console.error("檔案檢查錯誤:", error);
+                    // 本地檔案使用 file:// 協定時，fetch 會被阻止，這是很常見的情況
+                    // 在這種情況下，我們直接嘗試載入 iframe，讓瀏覽器自己處理
+                    if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
+                        // 本地環境，直接嘗試載入 iframe
+                        const fileUrl = PDF_PATH + "?t=" + Date.now();
+                        pdfIframe.src = fileUrl;
+                        setStatus('success', '嘗試載入 PDF（本地環境）');
+                        
+                        // 提示使用者如果無法顯示可以下載
+                        setTimeout(() => {
+                            setStatus('success', '若無法顯示，請使用下方下載功能');
+                        }, 1000);
+                    } else {
+                        showErrorInIframe(
+                            "無法連線或讀取檔案",
+                            `錯誤訊息：${error.message}\n\n請嘗試使用下方「直接下載」按鈕。`
+                        );
+                        setStatus('error', '讀取失敗');
+                    }
+                });
+        }
+        
+        // 設定下載連結
+        function setupDownload() {
+            // 設置下載連結
+            downloadLink.href = PDF_PATH;
+            fallbackDownloadLink.href = PDF_PATH;
+            
+            // 添加點擊下載時的路徑確認
+            downloadLink.addEventListener('click', function(e) {
+                console.log("下載檔案:", PDF_PATH);
+            });
+            
+            fallbackDownloadLink.addEventListener('click', function(e) {
+                console.log("備用下載:", PDF_PATH);
+            });
+        }
+        
+        // 如果 iframe 載入失敗的備用處理
+        function setupIframeErrorHandler() {
+            pdfIframe.onerror = function() {
+                console.log("iframe 載入錯誤");
+                showErrorInIframe(
+                    "PDF 嵌入失敗",
+                    "瀏覽器無法嵌入此 PDF 檔案。請點擊下方按鈕下載後使用本機閱讀器開啟。"
+                );
+                setStatus('error', '嵌入失敗');
+            };
+        }
+        
+        // 初始化
+        function init() {
+            setupDownload();
+            setupIframeErrorHandler();
+            loadPDF();
+        }
+        
+        init();
+    })();
+</script>
+
+		    <!-- 返回按鈕應該在這裡 -->
+    <button onclick="window.location.href='index.html'" 
+            style="position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; background: #4a6fa5; color: white; border: none; border-radius: 5px; cursor: pointer; z-index: 9999;">
+        返回主選單
+    </button>	
+
+</body>
+</html>

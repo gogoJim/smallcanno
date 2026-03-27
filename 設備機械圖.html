@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>設備機械圖文件庫</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+        }
+        
+        body {
+            display: flex;
+            background-color: #f5f5f5;
+            color: #333;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* 左側導航欄 */
+        .sidebar {
+            width: 280px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .logo {
+            text-align: center;
+            padding: 15px;
+            border-bottom: 1px solid #34495e;
+            margin-bottom: 20px;
+        }
+        
+        .logo h2 {
+            font-size: 1.3rem;
+            color: #ecf0f1;
+        }
+        
+        .logo p {
+            font-size: 0.75rem;
+            color: #95a5a6;
+            margin-top: 5px;
+        }
+        
+        .nav-menu {
+            flex-grow: 1;
+        }
+        
+        .nav-item {
+            padding: 14px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .nav-item:hover {
+            background-color: #34495e;
+            border-left-color: #3498db;
+        }
+        
+        .nav-item.active {
+            background-color: #34495e;
+            border-left-color: #3498db;
+        }
+        
+        .nav-icon {
+            font-size: 1.3rem;
+            width: 32px;
+            text-align: center;
+        }
+        
+        .nav-text {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        
+        .nav-badge {
+            font-size: 0.7rem;
+            background: #3498db;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+        
+        /* 右側主內容區 */
+        .main-content {
+            flex-grow: 1;
+            margin-left: 280px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #e9ecef;
+        }
+        
+        /* 頂部工具欄 */
+        .top-toolbar {
+            background: white;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #dee2e6;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .current-doc-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .doc-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .doc-badge {
+            background: #e9ecef;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: #495057;
+        }
+        
+        .download-btn {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+            text-decoration: none;
+        }
+        
+        .download-btn:hover {
+            background: #1e4663;
+        }
+        
+        /* PDF 檢視區域 */
+        .pdf-viewer-area {
+            flex: 1;
+            position: relative;
+            background: #525659;
+        }
+        
+        .pdf-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+            background: #525659;
+        }
+        
+        .welcome-screen {
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .welcome-icon {
+            font-size: 80px;
+            margin-bottom: 25px;
+            color: #3498db;
+        }
+        
+        .welcome-title {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .welcome-subtitle {
+            font-size: 1rem;
+            color: #7f8c8d;
+            max-width: 500px;
+            text-align: center;
+            line-height: 1.6;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 100;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .error-message {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ffebee;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .error-message.active {
+            display: flex;
+        }
+        
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #e74c3c;
+        }
+        
+        .error-box {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .retry-btn {
+            margin-top: 20px;
+            padding: 10px 24px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+                max-height: 50vh;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                height: calc(100vh - 50vh);
+            }
+            
+            .nav-menu {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            
+            .nav-item {
+                flex: 1;
+                min-width: 140px;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+            }
+            
+            .nav-item.active {
+                border-left: none;
+                border-bottom-color: #3498db;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <h2>🚒 各項設備機械圖庫</h2>
+            <p>PDF 技術文件</p>
+        </div>
+
+        <div class="nav-menu">
+
+            <div class="nav-item" data-pdf="images/機械圖-中央控制盤.pdf">
+                <span class="nav-icon">📘</span>
+                <span class="nav-text">中央控制盤</span>
+                <span class="nav-badge">PDF</span>
+            </div>
+            <div class="nav-item" data-pdf="images/機械圖-單元控制盤.pdf">
+                <span class="nav-icon">🛠️</span>
+                <span class="nav-text">單元控制盤</span>
+                <span class="nav-badge">PDF</span>
+            </div>
+            <div class="nav-item" data-pdf="images/機械圖-監視滅火單元.pdf">
+                <span class="nav-icon">🔫</span>
+                <span class="nav-text">監視滅火單元</span>
+                <span class="nav-badge">PDF</span>
+            </div>
+            <div class="nav-item" data-pdf="images/機械圖-現場操作盤.pdf">
+                <span class="nav-icon">🎛️</span>
+                <span class="nav-text">現場操作盤</span>
+                <span class="nav-badge">PDF</span>
+            </div>
+            <div class="nav-item" data-pdf="images/機械圖-其他閥件.pdf">
+                <span class="nav-icon">📟</span>
+                <span class="nav-text">其他閥件</span>
+                <span class="nav-badge">PDF</span>
+            </div>
+        </div>
+        
+        <div style="padding: 20px; color: #bdc3c7; font-size: 0.75rem; margin-top: auto; border-top: 1px solid #34495e; text-align: center;">
+            <p>點擊左側按鈕直接開啟 PDF 文件</p>
+            <p style="margin-top: 8px;">📁 檔案位置: images 資料夾</p>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <!-- 頂部工具欄 -->
+        <div class="top-toolbar" id="topToolbar" style="display: none;">
+            <div class="current-doc-info">
+                <span class="doc-title" id="currentDocTitle">GD-101 使用說明書</span>
+                <span class="doc-badge">PDF 文件</span>
+            </div>
+            <a id="downloadCurrentBtn" class="download-btn" href="#" download>📥 下載 PDF</a>
+        </div>
+        
+        <!-- PDF 檢視區域 -->
+        <div class="pdf-viewer-area" id="pdfViewerArea">
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-icon">📚</div>
+                <h1 class="welcome-title">各項設備機械圖庫</h1>
+                <p class="welcome-subtitle">
+                    請從左側選單選擇要查看的 PDF 文件<br>
+                    文件將直接在右側顯示
+                </p>
+            </div>
+            
+            <iframe id="pdfIframe" class="pdf-iframe" title="PDF 檢視器" style="display: none;"></iframe>
+            
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="spinner"></div>
+                <div class="loading-text">正在載入 PDF 文件...</div>
+            </div>
+            
+            <div class="error-message" id="errorMessage">
+                <div class="error-box">
+                    <div class="error-icon">⚠️</div>
+                    <h3>無法載入 PDF 檔案</h3>
+                    <p id="errorDetail">請檢查文件是否存在</p>
+                    <button class="retry-btn" id="retryBtn">重新載入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM 元素
+            const navItems = document.querySelectorAll('.nav-item');
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            const pdfIframe = document.getElementById('pdfIframe');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const errorMessage = document.getElementById('errorMessage');
+            const errorDetail = document.getElementById('errorDetail');
+            const topToolbar = document.getElementById('topToolbar');
+            const currentDocTitle = document.getElementById('currentDocTitle');
+            const downloadCurrentBtn = document.getElementById('downloadCurrentBtn');
+            const retryBtn = document.getElementById('retryBtn');
+            
+            let currentPdfPath = null;
+            let currentPdfName = null;
+            
+            // 文件標題對應表
+            const pdfTitleMap = {
+                'images/機械圖-中央控制盤.pdf': '中央控制盤',
+                'images/機械圖-單元控制盤.pdf': '單元控制盤書',
+                'images/機械圖-監視滅火單元.pdf': '監視滅火單元',
+                'images/機械圖-現場操作盤.pdf': '現場操作盤',
+                'images/機械圖-其他閥件.pdf': '其他閥件'
+            };
+            
+            function hideLoading() {
+                loadingOverlay.style.display = 'none';
+            }
+            
+            function showLoading() {
+                loadingOverlay.style.display = 'flex';
+                errorMessage.classList.remove('active');
+            }
+            
+            function showError(message) {
+                hideLoading();
+                errorDetail.innerText = message;
+                errorMessage.classList.add('active');
+                pdfIframe.style.display = 'none';
+                topToolbar.style.display = 'none';
+            }
+            
+            function showWelcome() {
+                welcomeScreen.style.display = 'flex';
+                pdfIframe.style.display = 'none';
+                topToolbar.style.display = 'none';
+                errorMessage.classList.remove('active');
+                hideLoading();
+                currentPdfPath = null;
+            }
+            
+            function loadPDF(pdfPath, pdfName) {
+                if (!pdfPath) return;
+                
+                currentPdfPath = pdfPath;
+                currentPdfName = pdfName;
+                
+                // 更新 UI
+                currentDocTitle.innerText = pdfName;
+                downloadCurrentBtn.href = pdfPath;
+                downloadCurrentBtn.download = pdfName + '.pdf';
+                
+                // 顯示載入中
+                welcomeScreen.style.display = 'none';
+                pdfIframe.style.display = 'block';
+                topToolbar.style.display = 'flex';
+                showLoading();
+                errorMessage.classList.remove('active');
+                
+                // 加入時間戳避免快取問題
+                const fileUrl = pdfPath + "?t=" + Date.now();
+                pdfIframe.src = fileUrl;
+                
+                // 設定載入成功處理
+                let loadTimeout = setTimeout(() => {
+                    if (loadingOverlay.style.display === 'flex') {
+                        hideLoading();
+                        showError('載入逾時，請檢查網路連線或檔案是否存在。');
+                    }
+                }, 10000);
+                
+                pdfIframe.onload = function() {
+                    clearTimeout(loadTimeout);
+                    hideLoading();
+                    
+                    // 檢查是否真的載入了 PDF（避免顯示錯誤頁面）
+                    setTimeout(() => {
+                        try {
+                            const iframeDoc = pdfIframe.contentDocument || pdfIframe.contentWindow.document;
+                            if (iframeDoc && iframeDoc.body) {
+                                const bodyText = iframeDoc.body.innerText || "";
+                                // 檢查是否為瀏覽器錯誤頁面
+                                if (bodyText.includes("404") || bodyText.includes("找不到") || 
+                                    bodyText.includes("Not Found") || bodyText.includes("無法載入")) {
+                                    showError('檔案不存在，請確認 PDF 檔案位於 images 資料夾中。');
+                                }
+                            }
+                        } catch (e) {
+                            // 跨域訪問被阻止，這是正常情況（PDF 成功載入時）
+                            console.log("PDF 已成功載入");
+                        }
+                    }, 500);
+                };
+                
+                pdfIframe.onerror = function() {
+                    clearTimeout(loadTimeout);
+                    hideLoading();
+                    showError('無法載入 PDF 檔案，請確認檔案是否存在。');
+                };
+            }
+            
+            // 重新載入按鈕
+            retryBtn.addEventListener('click', function() {
+                if (currentPdfPath) {
+                    loadPDF(currentPdfPath, currentPdfName);
+                }
+            });
+            
+            // 導航點擊事件
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // 更新 active 狀態
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const pdfPath = this.getAttribute('data-pdf');
+                    const section = this.getAttribute('data-section');
+                    
+                    if (section === 'welcome') {
+                        showWelcome();
+                        return;
+                    }
+                    
+                    if (pdfPath) {
+                        const pdfName = pdfTitleMap[pdfPath] || this.querySelector('.nav-text')?.innerText || 'PDF 文件';
+                        loadPDF(pdfPath, pdfName);
+                    }
+                });
+            });
+            
+            // 初始顯示歡迎畫面
+            showWelcome();
+        });
+    </script>
+	
+	    <!-- 返回按鈕應該在這裡 -->
+    <button onclick="window.location.href='index.html'" 
+            style="position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; background: #4a6fa5; color: white; border: none; border-radius: 5px; cursor: pointer; z-index: 9999;">
+        返回主選單
+    </button>	
+	
+</body>
+</html>

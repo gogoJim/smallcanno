@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>28項目設定表 (合併step1樣式)</title>
+    <style>
+        /* 完全繼承主系統視覺，但表格樣式改為step1的寶藍色風格 */
+        :root {
+            --primary-color: #2c7fb8;
+            --secondary-color: #7fcdbb;
+            --accent-color: #edf8b1;
+            --light-gray: #f5f5f5;
+            --dark-gray: #333;
+        }
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            color: var(--dark-gray);
+            line-height: 1.6;
+        }
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 8px;
+        }
+        .note-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* ----- 以下完全採用step1的表格樣式，並套用到.project28-table ----- */
+        .project28-table {
+            border-collapse: collapse;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background-color: white;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 14px; /* 保留原本字體大小，與step1風格融合 */
+        }
+
+        .project28-table th {
+            background: linear-gradient(to bottom, #2c7fb8, #1a6a9c); /* 寶藍色漸層 */
+            color: white;
+            font-weight: bold;
+            font-size: 15px;
+            padding: 15px 8px;
+            border: 1px solid #1a5a7a;
+            text-align: center;  /* step1 th置中 */
+            vertical-align: middle;
+        }
+
+        .project28-table td {
+            border: 1px solid #ddd;
+            padding: 12px 8px;
+            text-align: left;
+            vertical-align: top;
+            transition: background-color 0.2s;
+        }
+
+        .project28-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .project28-table tr:hover {
+            background-color: #e9f7fe;
+        }
+
+        /* 特別凸顯某些欄位 — 仿step1的黃綠底色，但只套用在內容與作業欄 (可選) */
+        .project28-table td:nth-child(3), 
+        .project28-table td:nth-child(4) {
+            background-color: #edf8b1;
+            font-weight: normal; /* 原本step1有bold，但為了可讀性保留半粗體 */
+        }
+
+        /* 第一欄(no)保留淡藍底色，如同step1的td:first-child */
+        .project28-table td:first-child {
+            background-color: #e6f2f8;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        /* 保留原本的強調樣式 */
+        .default-value {
+            color: #800080;
+            font-weight: bold;
+        }
+        .manual-mode {
+            color: #FF0000;
+            font-weight: bold;
+        }
+
+        /* 為了讓備考欄可讀，繼承原本底色，不覆蓋 */
+        .project28-table td:nth-child(6) {
+            background-color: transparent; 
+        }
+
+        /* 若想要「關聯NO.」欄位也能有特別色，可自行調整，這裡不強制 */
+        .project28-table td:nth-child(5) {
+            /* 保留預設或加淺色，可選 */
+        }
+
+        /* 讓表格內的span不影響背景 */
+        span {
+            background-color: transparent;
+        }
+    </style>
+</head>
+<body>
+
+    <table class="project28-table">
+        <thead>
+            <tr>
+                <th>NO.</th>
+                <th>設定項目</th>
+                <th>內容</th>
+                <th>作業</th>
+                <th>關聯 NO.</th>
+                <th>備考</th>
+            </tr>
+        </thead>
+        <tbody id="project28-table-body">
+            <!-- JS 動態生成 -->
+        </tbody>
+    </table>
+
+    <div class="note-box">
+        ※ 表格已套用 step1 的寶藍色標題列、斑馬紋、黃綠色強調欄位 (內容／作業)，以及第一欄淡藍底色。
+    </div>
+
+    <script>
+        // 完整28項目資料 (完全自原始檔案移出)
+        const project28Data = [
+            { no: 1, setting: "連接單元台數", content: "設定連接至系統之單元控制盤台數。", operation: "資料輸入(預設值：1台)", relation: "", note: "物件規格書" },
+            { no: 2, setting: "噴頭擺動之有無", content: "設定執行放水時噴頭擺動之條件", operation: "資料輸入（預設值：自動迴旋・自動放水模式時有）", relation: "", note: "物件規格書" },
+            { no: 3, setting: "至噴頭擺動開始之延遲時間", content: "從接收到壓力開關ON信號開始到開始擺動之時間。", operation: "依設備的設置條件從接收到壓力開關ON信號開始到開始放水為止之時間並不一致。從噴頭穩定放水開始，設計成可設定為停止15秒。需要現場之延遲時間情報。接受事前的聯絡（預設值：15秒）", relation: "2", note: "物件規格書" },
+            { no: 4, setting: "預設模式", content: "設定系統之平時監視模式。電源投入時、復歸操作時，自動切換在這裡設定之模式。", operation: "資料輸入（預設值：自動迴旋模式）", relation: "", note: "物件規格書" },
+            { no: 5, setting: "蓄積預警處理之有無", content: "設定是否處理火警發報之蓄積・預警事件。", operation: "資料輸入（預設值：蓄積・預警處理無）", relation: "", note: "物件規格書" },
+            { no: 6, setting: "自動放水開始條件", content: "設定自動放水條件之開始條件。", operation: "資料輸入（預設值：檢出器＋AND用探測器）", relation: "", note: "物件規格書" },
+            { no: 7, setting: "放水自動停止之有無", content: "自動放水模式設定時，設定在一定時間後是否自動停止放水。", operation: "資料輸入（預設值：放水自動停止有）", relation: "", note: "物件規格書" },
+            { no: 8, setting: "放水延遲時間", content: "設定從自動放水條件確定開始，到實際開始自動放水為止之倒數計時時間。", operation: "資料輸入（預設值：30秒）", relation: "", note: "物件規格書" },
+            { no: 9, setting: "自動放水持續時間", content: "設定從自動放水開始到自動停止為止之時間。", operation: "資料輸入（預設值：10分）", relation: "7", note: "物件規格書" },
+            { no: 10, setting: "火警移報輸入對單元群組的關連", content: "中央控制盤8點火警警報輸入對單元群組的關連。", operation: "資料輸入（預設值：參考中央控制盤LCD規格書）", relation: "17", note: "物件規格書" },
+            { no: 11, setting: "汎用移報輸入屬性", content: "設定汎用輸入的屬性（中央控制盤之汎用輸入為ON時之動作）。", operation: "資料輸入（預設值：僅表示全部汎用輸入）", relation: "", note: "物件規格書" },
+            { no: 12, setting: "汎用移報輸入對單元群組之關連", content: "在探測器連動模式時用預警處理使檢出器動作時使用。中央控制盤之汎用移報輸入（屬性：火警警報蓄積事件）對單元群組之關連。", operation: "資料輸入（預設值：全部汎用輸入以及全部單元群組關連無）", relation: "5<br>11<br> 14<br> 17", note: "物件規格書" },
+            { no: 13, setting: "汎用移報輸出連動資料", content: "中央控制盤40點汎用輸出，設定各個輸出最多4個系統內的事件。對狀態變化使其連動。", operation: "資料輸入（預設值：參考中央控制盤LCD規格書）", relation: "18", note: "物件規格書" },
+            { no: 14, setting: "檢出器火災監視動作模式", content: "設定巡查型火災檢出器之火災監視動作模式（常時監視、探測器連動）。", operation: "資料輸入（預設值：常時監視模式）", relation: "", note: "物件規格書" },
+            { no: 15, setting: "檢出器停止模式", content: "設定用外部之檢出器停止開關(預備輸入)將巡查型火災檢出器從常時監視變更為探測器連動之單元控制盤。", operation: "資料輸入（預設值：不停止）", relation: "14", note: "物件規格書" },
+            { no: 16, setting: "單元設置高度", content: "設定火災檢出滅火單元的設置高度（從地板面到噴頭前端的高度）。", operation: "資料輸入（預設值：4m）", relation: "", note: "物件規格書" },
+            { no: 17, setting: "單元群組號碼", content: "設定單元所屬之群組。對火災移報輸入、汎用移報輸入之關連。", operation: "資料輸入（預設值：單元群組號碼=單元控制盤定址碼）", relation: "10<br>12", note: "物件規格書" },
+            { no: 18, setting: "火災方向移報資料", content: "設定為了將巡查型火災檢出器的檢出方向表現到最多８個範圍火災的資料。", operation: "資料輸入（預設值：參考中央控制盤LCD規格書）", relation: "22<br>25", note: "物件規格書" },
+            { no: 19, setting: "射程切換步距", content: "依水平方向火點的位置切換放水射程（遠・近），<br>最多可設定20個。無法設定之水平方向由預設值設定。<br>設置高度　　　　　　近射程　　　　　　遠射程<br>　 Ｈ（ｍ）　　　　　Ｘ１～Ｘ２　　　　　Ｙ１～Ｙ２<br>  ４～６ｍ　　　－０．５～２３ｍ　　　　２２～３６ｍ<br>  ６～８ｍ     －０．５～２４ｍ　　　　２３～３８ｍ<br>  ８～１５ｍ　　－０．５～２５ｍ　　　　２４～４０ｍ", operation: "預設值之確認步驟<br>①在水平距離之近射程遠側(Ｘ２)的位置用ＳＨ做模擬火點。<br>②用火災步距監視（維修模式）確認垂直步距數（Ｚ１）。<br>③在水平距離之遠射程近側(Ｙ１)的位置用ＳＨ做模擬火點。<br>④用火災步距監視（維修模式）確認垂直步距數（Ｚ２）。<br>⑤預設步距數不在Ｚ１～Ｚ２內時，變更為（Ｚ１＋Ｚ２）/２的步距數。<br>遠近射程控制的確認<br>①在（Ｘ２－０．５）ｍ的位置用ＳＨ做模擬火點。<br>②應為近射程。<br>③在（Ｙ１＋０．５）ｍ的位置用ＳＨ做模擬火點。<br>④應為遠射程。", relation: "22<br> 25", note: "物件規格書" },
+            { no: 20, setting: "基本刪除資料", content: "可變更巡查型火災檢出器之非監視領域的開始步距。進行設置高度的變更的話則預設值要再設定。", operation: "確認步驟<br>①將檢出器的感度設定為點檢感度Ｈ。<br>②在最遠監視距離的位置用ＳＨ（ＮＨ）做模擬火點。<br>③應檢出火災。無法檢出時用「現在之步距數＋5步距」設定刪除值，再次實行②的步驟。<br>④用火災步距監視確認檢出器之垂直步距數，和理論値比較。<br>⑤在最遠監視距離＋Ｘ（確認試驗Ｘ＝２ｍ）的位置用ＳＨ（ＮＨ）做火點。<br>⑥應不檢出火災。檢出時一邊確認步距數，一邊考慮④的垂直步距數，再變更刪除值。<br>⑦再次設定時有需要的話實施①～⑥的步驟。", relation: "16<br> 22<br> 23", note: "物件規格書" },
+            { no: 21, setting: "個別刪除資料", content: "巡查型火災檢出器之非監視領域（扇狀的帶型領域）最多可設定40個。", operation: "", relation: "22<br> 23", note: "物件規格書" },
+            { no: 22, setting: "單元設置方向的水平補償", content: "補正物件設計和現場施工之水平方向的偏移。反映在刪除資料、射程切換步距、火災方向移報資料的水平步距數。", operation: "①在某點用ＳＨ做模擬火點。<br>②一邊使用火災步距監視（點檢模式），一邊確認水平步距。<br>③一邊與設計之理論步距數比較，有需要時輸入補正值。", relation: "18<br> 19<br> 20<br> 21", note: "現場調整" },
+            { no: 23, setting: "巡查型火災檢出器之垂直0點調整", content: "調整檢出器之垂直0點方向的功能。<br>※儲存到單元控制盤之Ｅ２ＰＲＯＭ裡。<br>在宮城調整時由於對應之單元控制盤不存在，必須在現場調整。", operation: "①設定設置高度<br>②設定檢出器感度為點檢感度Ｈ<br>③設定手動放水模式<br>④在450步距的位置（由EXCEL表算出水平距離）用ＳＨ點火<br>⑤輸入450步距實行調整。<br>⑥在最遠監視距離的位置用ＳＨ做模擬火點<br>⑦算出該步距數（由EXCEL表算出步距數）<br>⑧輸入該步距數實行調整", relation: "", note: "現場調整" },
+            { no: 24, setting: "放水範圍", content: "為了避免在火災檢出滅火單元内部放水，設定放水開始許可步距數。", operation: "①設定手動模式<br>②用右迴旋操作為了使噴頭的方向和單元正面盤面平行一致（收納位置側），實行調整。", relation: "25", note: "目視調整<br>※為了能進行噴頭水平0點調整的設定" },
+            { no: 25, setting: "噴頭水平0點調整", content: "重置噴頭迴旋用編碼器之角度情報（設定基準）。<br>※儲存至編碼器内部Ｅ２ＰＲＯＭ内。", operation: "①設定手動模式<br>②用左迴旋操作將噴頭迴旋至左微動（極限）位置為止，實行調整。", relation: "", note: "槍銃基準設定" },
+            { no: 26, setting: "噴頭火災方向調整（自動）", content: "巡查型檢出器之水平步距和噴頭之編碼器步距的關連功能。", operation: "①設定手動模式\n②在實驗場的中心線上放置ＳＨ，使其火災發報。<br>③讓放水槍和實驗場的中心一致放水。<br>④一邊操作放水槍，一邊微調整，實施調整。<br>⑤紀錄火點和噴頭的步距數。", relation: "25", note: "調整 <br>※為了能進行噴頭水平0點調整的設定" },
+            { no: 27, setting: "噴頭火災方向調整（手動）", content: "巡查型檢出器之水平步距和噴頭之編碼器步距的關連功能。輸入火點和噴頭之步距數。", operation: "①輸入從宮城送來的數值。<br>②設定自動迴旋模式<br>③用ＳＨ使其檢出火災，檢出器和噴頭位置是否設定正確以目視確認。", relation: "25", note: "調整<br>※為了能進行噴頭水平0點調整的設定" },
+            { no: 28, setting: "噴頭收納方向調整", content: "調整電源投入時、復歸時之噴頭收納位置。", operation: "①按下復歸開關。<br>②確認迴轉蓋板和正面蓋板之表面是否一致。<br>③有偏差時迴旋放水槍進行微調整，實行調整。", relation: "25", note: "目視調整<br>※為了能進行噴頭水平0點調整的設定" }
+        ];
+
+        // 渲染表格
+        function renderProject28Table() {
+            const tbody = document.getElementById('project28-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            project28Data.forEach(item => {
+                const row = document.createElement('tr');
+                // 替換關鍵字樣式
+                let op = item.operation;
+                let cont = item.content;
+                if (op) {
+                    op = op.replace(/預設值/g, '<span class="default-value">預設值</span>')
+                           .replace(/手動/g, '<span class="manual-mode">手動</span>');
+                }
+                if (cont) {
+                    cont = cont.replace(/預設值/g, '<span class="default-value">預設值</span>')
+                               .replace(/手動/g, '<span class="manual-mode">手動</span>');
+                }
+                row.innerHTML = `
+                    <td>${item.no}</td>
+                    <td>${item.setting}</td>
+                    <td>${cont || ''}</td>
+                    <td>${op || ''}</td>
+                    <td>${item.relation || ''}</td>
+                    <td>${item.note || ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        window.onload = renderProject28Table;
+    </script>
+</body>
+</html>

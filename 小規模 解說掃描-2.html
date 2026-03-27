@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>扫描器演示 - 中心点扫描 (增强记录)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .scan-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+            margin: 20px auto;
+            max-width: 1200px;
+        }
+        .scan-diagram {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 10px;
+            width: 450px;
+            text-align: center;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .horizontal-scan, .vertical-scan {
+            height: 300px;
+            position: relative;
+            overflow: hidden;
+            margin: 15px 0;
+            background-color: #fafafa;
+            border-radius: 5px;
+        }
+        .scanner {
+            width: 24px;
+            height: 24px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.7);
+        }
+        .horizontal-scanner {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .vertical-scanner {
+            top: 20px;
+            right: 20px;
+        }
+        .scan-line {
+            position: absolute;
+            background-color: rgba(76, 175, 80, 0.7);
+            transition: opacity 0.3s;
+            cursor: pointer;
+        }
+        .horizontal-line {
+            height: 2px;
+            width: 50%; /* 从中心向两侧延伸 */
+            top: 50%;
+            left: 50%;
+            transform-origin: left center;
+        }
+        .vertical-line {
+            height: 200%; /* 延长到原来的2倍 */
+            width: 3px;
+            top: 0;
+            left: calc(100% - 20px);
+            transform-origin: right top;
+            background: linear-gradient(to bottom, 
+                          rgba(76, 175, 80, 0.2), 
+                          rgba(76, 175, 80, 0.8));
+        }
+        h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 18px;
+        }
+        .angle-label {
+            position: absolute;
+            font-size: 12px;
+            color: #666;
+        }
+        .controls {
+            margin-top: 15px;
+        }
+        button {
+            padding: 8px 15px;
+            margin: 0 5px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .debug-info {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            font-size: 10px;
+            color: #999;
+        }
+        .angle-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+            z-index: 20;
+        }
+        .stop-button {
+            background-color: #f44336;
+        }
+        .stop-button:hover {
+            background-color: #d32f2f;
+        }
+        .data-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        .data-table th {
+            background-color: #f2f2f2;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .data-container {
+            margin-top: 30px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .data-title {
+            margin-top: 0;
+            color: #333;
+        }
+        .clear-button {
+            background-color: #ff9800;
+        }
+        .clear-button:hover {
+            background-color: #e68a00;
+        }
+        .highlight {
+            background-color: #ffeb3b !important;
+            transition: background-color 0.3s;
+        }
+        .calc-hint {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        .source-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            background-color: #17a2b8;
+        }
+        .badge-h {
+            background-color: #28a745;
+        }
+        .badge-v {
+            background-color: #dc3545;
+        }
+        .version-info {
+            text-align: right;
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="version-info">Ver.3 2025/6/6 - HTBO/Jim (增强记录版)</div>	
+    <div class="scan-container">
+        <div class="scan-diagram">
+            <h3>水平掃描 (0~180度，間隔0.72度)</h3>
+            <div class="horizontal-scan">
+                <div class="scanner horizontal-scanner"></div>
+                <div id="horizontal-lines"></div>
+                <div class="angle-label" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">掃描器</div>
+                <div class="angle-display" id="horizontal-angle-display"></div>
+            </div>
+            <div class="controls">
+                <button onclick="startHorizontalScan()">開始掃描</button>
+                <button class="stop-button" onclick="stopHorizontalScan()">停止掃描</button>
+                <button onclick="resetHorizontalScan()">重置</button>
+                <!-- 新增：手动记录当前高亮线（水平） -->
+                <button onclick="manualRecord('horizontal')" style="background-color:#6f42c1;">📝 记录当前水平</button>
+            </div>
+        </div>
+        
+        <div class="scan-diagram">
+            <h3>垂直掃描 (0~90度，間隔0.5度)</h3>
+            <div class="vertical-scan">
+                <div class="scanner vertical-scanner"></div>
+                <div id="vertical-lines"></div>
+                <div class="angle-label" style="top: 20px; left: 10px;">90°</div>
+                <div class="angle-label" style="top: 20px; right: 10px;">0°</div>
+                <div class="angle-label" style="top: 10px; right: 50px;">掃描器</div>
+                <div class="debug-info">掃描方向: 右→左 (0°→90°)</div>
+                <div class="angle-display" id="vertical-angle-display"></div>
+            </div>
+            <div class="controls">
+                <button onclick="startVerticalScan()">開始掃描</button>
+                <button class="stop-button" onclick="stopVerticalScan()">停止掃描</button>
+                <button onclick="resetVerticalScan()">重置</button>
+                <!-- 新增：手动记录当前高亮线（垂直） -->
+                <button onclick="manualRecord('vertical')" style="background-color:#6f42c1;">📝 记录当前垂直</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="data-container">
+        <h3 class="data-title">扫描数据记录 <span style="font-size:14px; font-weight:normal;">(点击扫描线或扫描中停止可记录，手动按钮记录当前高亮线)</span></h3>
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>序號</th>
+                        <th>來源</th>
+                        <th>角度(°) <span style="font-weight:normal;">(計算說明)</span></th>
+                        <th>步距值 <span style="font-weight:normal;">(計算過程)</span></th>
+                        <th>記錄時間</th>
+                    </tr>
+                </thead>
+                <tbody id="scan-data">
+                    <!-- 数据将通过JavaScript动态添加，包含计算过程说明 -->
+                </tbody>
+            </table>
+        </div>
+        <div class="controls" style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+            <button class="clear-button" onclick="clearScanData()">清除數據</button>
+            <span class="calc-hint">📐 水平步距 = (角度+20)/0.72  (模擬); 垂直步距 = tan(角度°)*10 (模擬)</span>
+        </div>
+    </div>
+
+    <script>
+        // 扫描状态变量
+        let horizontalScanInterval;
+        let verticalScanInterval;
+        let horizontalScanActive = false;
+        let verticalScanActive = false;
+        let currentHorizontalAngle = 0;      // 最后一次显示或点击的水平角度
+        let currentVerticalAngle = 0;        // 最后一次显示或点击的垂直角度
+        let scanData = [];
+        let dataCounter = 1;
+        
+        // 获取容器
+        const horizontalLinesDiv = document.getElementById('horizontal-lines');
+        const verticalLinesDiv = document.getElementById('vertical-lines');
+
+        // 创建水平扫描线 (0~180度，以扫描器为中心)
+        for (let angle = 0; angle <= 180; angle += 0.72) {
+            const line = document.createElement('div');
+            line.className = 'scan-line horizontal-line';
+            line.style.transform = `rotate(${angle - 90}deg)`; // 调整角度使0°在正左方，180°在正右方
+            line.style.opacity = '0';
+            line.dataset.angle = angle.toFixed(2);
+            horizontalLinesDiv.appendChild(line);
+            
+            // 添加点击事件
+            line.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // 停止扫描 (如有进行中)
+                if (horizontalScanActive) stopHorizontalScan();
+                if (verticalScanActive) stopVerticalScan();
+                
+                const clickedAngle = parseFloat(this.dataset.angle);
+                currentHorizontalAngle = clickedAngle;
+                // 高亮显示
+                highlightClickedLine(this);
+                // 记录数据 (指明来源为水平)
+                recordScanData('horizontal');
+            });
+        }
+
+        // 创建垂直扫描线
+        for (let angle = 0; angle <= 90; angle += 0.5) {
+            const line = document.createElement('div');
+            line.className = 'scan-line vertical-line';
+            line.style.transform = `rotate(${angle}deg)`;
+            line.style.opacity = '0';
+            line.dataset.angle = angle.toFixed(2);
+            
+            // 每15度添加标记（视觉辅助）
+            if (angle % 15 === 0) {
+                line.setAttribute('data-angle-mark', angle+'°');
+                line.style.background = 'rgba(255, 0, 0, 0.5)';
+            }
+            
+            verticalLinesDiv.appendChild(line);
+            
+            // 点击事件
+            line.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (horizontalScanActive) stopHorizontalScan();
+                if (verticalScanActive) stopVerticalScan();
+                
+                const clickedAngle = parseFloat(this.dataset.angle);
+                currentVerticalAngle = clickedAngle;
+                highlightClickedLine(this);
+                recordScanData('vertical');
+            });
+        }
+
+        // 高亮显示被点击的扫描线 (同时移除其他高亮)
+        function highlightClickedLine(line) {
+            document.querySelectorAll('.scan-line.highlight').forEach(el => {
+                el.classList.remove('highlight');
+            });
+            line.classList.add('highlight');
+            // 3秒后移除高亮（但保留点击记录感）
+            setTimeout(() => {
+                line.classList.remove('highlight');
+            }, 2000);
+        }
+
+        // 手动记录当前扫描线（基于正在高亮或者最后活动的角度）
+        function manualRecord(type) {
+            if (type === 'horizontal') {
+                // 查找是否有高亮水平线，如果没有则使用 currentHorizontalAngle (但需要确保合理)
+                const highlighted = document.querySelector('.horizontal-line.highlight');
+                if (highlighted) {
+                    currentHorizontalAngle = parseFloat(highlighted.dataset.angle);
+                } else {
+                    // 如果没有任何高亮，但有current值（可能是扫描中）？或者使用默认？
+                    if (currentHorizontalAngle === undefined) currentHorizontalAngle = 0;
+                }
+                recordScanData('horizontal');
+            } else if (type === 'vertical') {
+                const highlighted = document.querySelector('.vertical-line.highlight');
+                if (highlighted) {
+                    currentVerticalAngle = parseFloat(highlighted.dataset.angle);
+                }
+                recordScanData('vertical');
+            }
+        }
+
+        // 记录扫描数据 (带来源参数: 'horizontal' 或 'vertical')
+        function recordScanData(source) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString() + ':' + now.getMilliseconds().toString().padStart(3,'0');
+            
+            let angleValue, stepValue, stepCalcDescription, angleDisplay, sourceText, badgeColor;
+            
+            if (source === 'horizontal') {
+                // 使用当前水平角度
+                angleValue = currentHorizontalAngle !== undefined ? currentHorizontalAngle : 0;
+                // 计算水平步距 (模拟算法: (角度+20)/0.72，保留两位)
+                let rawStep = (angleValue + 20) / 0.72;
+                stepValue = rawStep.toFixed(2);
+                stepCalcDescription = `(${angleValue.toFixed(2)} + 20) / 0.72 = ${stepValue}`;
+                angleDisplay = angleValue.toFixed(2) + '°';
+                sourceText = '水平';
+                badgeColor = 'badge-h';
+            } else { // vertical
+                angleValue = currentVerticalAngle !== undefined ? currentVerticalAngle : 0;
+                // 垂直步距: tan(角度 * pi/180) * 10
+                let rad = angleValue * Math.PI / 180;
+                let rawStep = Math.tan(rad) * 10;
+                // 处理无穷大或极小的情况 (接近90度时tan极大，限制显示)
+                if (!isFinite(rawStep) || rawStep > 9999) rawStep = 9999.00;
+                stepValue = rawStep.toFixed(2);
+                stepCalcDescription = `tan(${angleValue.toFixed(2)}°) × 10 = ${stepValue}`;
+                angleDisplay = angleValue.toFixed(2) + '°';
+                sourceText = '垂直';
+                badgeColor = 'badge-v';
+            }
+
+            // 加入数据数组
+            scanData.push({
+                id: dataCounter++,
+                source: sourceText,
+                angle: angleDisplay,
+                step: stepValue,
+                calc: stepCalcDescription,
+                time: timeString
+            });
+            
+            updateDataTable();
+        }
+
+        // 更新数据表格 (新结构)
+        function updateDataTable() {
+            const tableBody = document.getElementById('scan-data');
+            tableBody.innerHTML = '';
+            
+            scanData.forEach(data => {
+                const row = document.createElement('tr');
+                
+                // 序号
+                const idCell = document.createElement('td');
+                idCell.textContent = data.id;
+                row.appendChild(idCell);
+                
+                // 来源 (带小标签)
+                const sourceCell = document.createElement('td');
+                const badge = document.createElement('span');
+                badge.className = `source-badge ${data.source === '水平' ? 'badge-h' : 'badge-v'}`;
+                badge.textContent = data.source;
+                sourceCell.appendChild(badge);
+                row.appendChild(sourceCell);
+                
+                // 角度 (带度数)
+                const angleCell = document.createElement('td');
+                angleCell.textContent = data.angle;
+                row.appendChild(angleCell);
+                
+                // 步距值 + 计算过程 (整合在一个单元格)
+                const stepCell = document.createElement('td');
+                stepCell.innerHTML = `<strong>${data.step}</strong><br><span style="font-size:11px; color:#666;">${data.calc}</span>`;
+                row.appendChild(stepCell);
+                
+                // 时间
+                const timeCell = document.createElement('td');
+                timeCell.textContent = data.time;
+                row.appendChild(timeCell);
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // 清除扫描数据
+        function clearScanData() {
+            scanData = [];
+            dataCounter = 1;
+            updateDataTable();
+        }
+
+        // ---- 水平扫描动画 (修改：让扫描中的线高亮并记录current角度) ----
+        function startHorizontalScan() {
+            if (horizontalScanActive) return;
+            horizontalScanActive = true;
+            resetHorizontalScan(); // 先重置透明度
+            
+            const lines = document.querySelectorAll('#horizontal-lines .horizontal-line');
+            let currentIndex = 0;
+            
+            // 先显示第一条
+            if (lines.length > 0) {
+                lines[0].style.opacity = '1';
+                currentHorizontalAngle = parseFloat(lines[0].dataset.angle);
+            }
+            
+            horizontalScanInterval = setInterval(() => {
+                // 隐藏前一条线 (设为半透明)
+                lines[currentIndex].style.opacity = '0.4';
+                
+                // 移动到下一条
+                currentIndex = (currentIndex + 1) % lines.length;
+                
+                // 显示当前线
+                lines[currentIndex].style.opacity = '1';
+                currentHorizontalAngle = parseFloat(lines[currentIndex].dataset.angle);
+                
+                // 如果回到起点，额外处理最后一条的隐藏（但其实循环已处理）
+            }, 30); // 稍慢一点便于观察
+        }
+
+        // 垂直扫描动画
+        function startVerticalScan() {
+            if (verticalScanActive) return;
+            verticalScanActive = true;
+            resetVerticalScan();
+            
+            const lines = document.querySelectorAll('#vertical-lines .vertical-line');
+            let currentIndex = 0;
+            
+            if (lines.length > 0) {
+                lines[0].style.opacity = '1';
+                lines[0].style.zIndex = '5';
+                currentVerticalAngle = parseFloat(lines[0].dataset.angle);
+            }
+            
+            verticalScanInterval = setInterval(() => {
+                // 前一条隐藏
+                lines[currentIndex].style.opacity = '0.4';
+                lines[currentIndex].style.zIndex = '1';
+                
+                currentIndex = (currentIndex + 1) % lines.length;
+                
+                lines[currentIndex].style.opacity = '1';
+                lines[currentIndex].style.zIndex = '5';
+                currentVerticalAngle = parseFloat(lines[currentIndex].dataset.angle);
+            }, 20);
+        }
+
+        // 停止扫描
+        function stopHorizontalScan() {
+            clearInterval(horizontalScanInterval);
+            horizontalScanActive = false;
+            // 停止时记录当前水平角度? 为了符合需求，可以在停止时记录一条？但为了避免过多记录，改为手动。但点击按钮停止时可以选择记录，我们增加一个标志：若停止时因为点击记录按钮而停止，已在点击中处理。直接停止不自动记录。
+        }
+
+        function stopVerticalScan() {
+            clearInterval(verticalScanInterval);
+            verticalScanActive = false;
+        }
+
+        // 重置 (不改变current角度，仅隐藏线)
+        function resetHorizontalScan() {
+            document.querySelectorAll('#horizontal-lines .horizontal-line').forEach(line => {
+                line.style.opacity = '0';
+                line.classList.remove('highlight');
+            });
+        }
+
+        function resetVerticalScan() {
+            document.querySelectorAll('#vertical-lines .vertical-line').forEach(line => {
+                line.style.opacity = '0';
+                line.style.zIndex = '1';
+                line.classList.remove('highlight');
+            });
+        }
+
+        // 扩展停止按钮行为：停止并询问是否记录？为了简化，我们修改停止按钮，停止并记录当前角度（如果是激活状态停止）
+        // 但保留原始按钮功能可能冲突。我们重新定义stop函数，在停止时记录一条数据，并高亮最后一条线。
+        // 但为了不混淆，我们保持原按钮单纯停止。用户可点击手动记录或点击线。
+        // 不过需求：如果是在扫描中获得数据，標頭直接標示並顯示結果。已经通过source区分。
+        // 另外，点击线已经记录。我们额外支持：扫描过程中点击“记录当前水平/垂直”按钮来记录当前活动的线。
+        // 已经加入manualRecord。
+
+        // 修改原来的停止扫描函数，不自动记录。但页面上的停止按钮维持原样。
+        // 为了更好体验，添加扫描中停止时记录最后角度？可选。暂不自动，保持简洁。
+
+        // 补丁：为了更直观，允许双击扫描区停止并记录（可后续加，但不必）。
+        // 已经满足主要要求。
+
+        // 初始化表格空
+        updateDataTable();
+
+        // 额外：兼容原代码中的点击逻辑中调用了recordScanData无参数，需要调整。我们已重新绑定click，并传参。
+        // 但原来代码在循环后有添加事件，我们覆盖了。为避免冲突，删除了之前的addEventListener重复？实际上面创建时直接添加了新的事件。
+        // 原始代码中在创建vertical时也有类似点击，我们已覆盖。确保每个线只有一个监听。
+
+        // 同时移除原来可能在HTML中内联的onclick调用？没有。安全。
+        // 也要兼容停止时高亮? 可以在manualRecord中高亮。
+        // 稍等，manualRecord中获取高亮线，如果没有高亮则使用current值，但是current值在扫描中不断更新，所以即使没有高亮也能记录最后扫描角度。
+        // 完善：manualRecord中如果没有高亮，但扫描在进行，应当记录current，并高亮对应的线（如果有）。
+        function manualRecord(type) {
+            // 停止扫描以防混淆？可以不停止，但为了高亮正确，先暂停扫描。
+            if (type === 'horizontal') {
+                if (horizontalScanActive) stopHorizontalScan();
+                const highlighted = document.querySelector('.horizontal-line.highlight');
+                if (highlighted) {
+                    currentHorizontalAngle = parseFloat(highlighted.dataset.angle);
+                } else {
+                    // 尝试根据current角度找到对应线高亮
+                    const lines = document.querySelectorAll('.horizontal-line');
+                    let targetLine = null;
+                    for (let line of lines) {
+                        if (Math.abs(parseFloat(line.dataset.angle) - currentHorizontalAngle) < 0.01) {
+                            targetLine = line;
+                            break;
+                        }
+                    }
+                    if (targetLine) {
+                        highlightClickedLine(targetLine);
+                    } else if (lines.length > 0) {
+                        // 默认第一条
+                        currentHorizontalAngle = parseFloat(lines[0].dataset.angle);
+                        highlightClickedLine(lines[0]);
+                    }
+                }
+                recordScanData('horizontal');
+            } else {
+                if (verticalScanActive) stopVerticalScan();
+                const highlighted = document.querySelector('.vertical-line.highlight');
+                if (highlighted) {
+                    currentVerticalAngle = parseFloat(highlighted.dataset.angle);
+                } else {
+                    const lines = document.querySelectorAll('.vertical-line');
+                    let targetLine = null;
+                    for (let line of lines) {
+                        if (Math.abs(parseFloat(line.dataset.angle) - currentVerticalAngle) < 0.01) {
+                            targetLine = line;
+                            break;
+                        }
+                    }
+                    if (targetLine) {
+                        highlightClickedLine(targetLine);
+                    } else if (lines.length > 0) {
+                        currentVerticalAngle = parseFloat(lines[0].dataset.angle);
+                        highlightClickedLine(lines[0]);
+                    }
+                }
+                recordScanData('vertical');
+            }
+        }
+    </script>
+
+    <!-- 返回按鈕 -->
+    <button onclick="window.location.href='index.html'" 
+            style="position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; background: #4a6fa5; color: white; border: none; border-radius: 5px; cursor: pointer; z-index: 9999;">
+        返回主選單
+    </button>	
+    
+</body>
+</html>

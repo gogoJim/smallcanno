@@ -1,0 +1,3685 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCD表示メッセージ対照表（日文+繁體中文+英文）</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'MS Gothic', 'Hiragino Kaku Gothic Pro', 'Microsoft JhengHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 10px;
+        }
+        
+        .description {
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            font-size: 1.1em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+        
+        th {
+            background-color: #e74c3c;
+            color: white;
+            font-weight: 600;
+            padding: 12px 10px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            border: 1px solid #ddd;
+        }
+        
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e1e1e1;
+            vertical-align: top;
+            border: 1px solid #ddd;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #ffeaea;
+        }
+        
+        .no-col {
+            width: 50px;
+            text-align: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .event-col {
+            width: 300px;
+        }
+        
+        .lcd-col {
+            width: 300px;
+        }
+        
+        .panel-col {
+            width: 100px;
+        }
+        
+        .terminal-col {
+            width: 100px;
+        }
+        
+        .chinese-translation {
+            color: #2c3e50;
+            font-weight: normal;
+            display: block;
+            margin-top: 3px;
+            font-size: 0.85em;
+            border-top: 1px dashed #ddd;
+            padding-top: 3px;
+        }
+        
+        .english-translation {
+            color: #2980b9;
+            font-weight: normal;
+            display: block;
+            margin-top: 3px;
+            font-size: 0.85em;
+            font-style: italic;
+            padding-top: 2px;
+        }
+        
+        .code-container {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 40px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+        
+        .code-title {
+            color: #ecf0f1;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .note {
+            background-color: #fffde7;
+            padding: 15px;
+            border-left: 4px solid #f1c40f;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+        
+        .info-box {
+            background-color: #e8f4fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .filter-controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .filter-controls label {
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .filter-controls input, .filter-controls select {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            margin-right: 20px;
+        }
+        
+        .summary {
+            background-color: #d5f4e6;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        
+        .language-toggle {
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .language-toggle label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .language-toggle input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        
+        @media (max-width: 992px) {
+            .container {
+                padding: 15px;
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .filter-controls {
+                flex-direction: column;
+            }
+            
+            .filter-controls > * {
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LCD表示メッセージ対照表（日文+繁體中文+英文）</h1>
+        <p class="description">火災警報システムの各種イベント、状態、障害メッセージとLCD表示内容の対照表（繁體中文・英文對照付き）</p>
+        
+        <div class="info-box">
+            <p><strong>情報:</strong> この表は火災警報システムのLCD表示メッセージをまとめたものです。No.順に並んでおり、完全に空の行は表示されていません。</p>
+            <p><strong>中文說明:</strong> 此表格顯示火災警報系統的LCD顯示訊息對照表，包含日文、繁體中文與英文對照。</p>
+            <p><strong>English:</strong> This table shows LCD display messages for fire alarm system with Japanese, Traditional Chinese and English translations.</p>
+            <p>合計: <span id="total-count">0</span> 件のメッセージが登録されています。</p>
+        </div>
+        
+        <div class="language-toggle">
+            <label for="show-chinese">顯示中文翻譯:</label>
+            <input type="checkbox" id="show-chinese" checked>
+            <span style="margin-left: 10px;">✓ 已啟用繁體中文對照顯示</span>
+            <label for="show-english" style="margin-left: 20px;">顯示英文翻譯:</label>
+            <input type="checkbox" id="show-english" checked>
+            <span style="margin-left: 10px;">✓ 已啟用英文對照顯示</span>
+        </div>
+        
+        <div class="filter-controls">
+            <label for="search">検索/搜索/Search:</label>
+            <input type="text" id="search" placeholder="イベント名、LCD表示、端末名などで検索 / 以事件名、LCD顯示、終端名稱等搜索 / Search by event name, LCD display, terminal name, etc.">
+            
+            <label for="category-filter">カテゴリ/類別/Category:</label>
+            <select id="category-filter">
+                <option value="all">すべてのカテゴリ / 所有類別 / All Categories</option>
+                <option value="火災">火災 / 火災 / Fire</option>
+                <option value="状態">状態 / 狀態 / Status</option>
+                <option value="SW">SW / 開關 / Switch</option>
+                <option value="放水">放水 / 放水 / Discharge</option>
+                <option value="P入力">P入力 / P輸入 / P Input</option>
+                <option value="障害">障害 / 故障 / Fault</option>
+            </select>
+            
+            <button id="reset-filters">フィルタリセット / 重置篩選 / Reset Filters</button>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th class="no-col">No.</th>
+                    <th class="event-col">イベント / 事件 / Event</th>
+                    <th class="lcd-col">ＬＣＤ表示 / LCD顯示 / LCD Display</th>
+                    <th class="panel-col">盤名称 / Panel Name</th>
+                    <th class="terminal-col">端末名称 / Terminal Name</th>
+                    <th>発生側イベント名称 / Event Name</th>
+                    <th>イベント / Event</th>
+                    <th>復旧側イベント名称 / Recovery Event Name</th>
+                    <th>イベント / Event</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- テーブル内容はJavaScriptで動的に生成 -->
+            </tbody>
+        </table>
+        
+        <div class="summary">
+            表示中: <span id="display-count">0</span> 件 / 全 <span id="total-items">0</span> 件
+        </div>
+        
+        <div class="note">
+            <p><strong>注意:</strong> この表では完全に空の行はスキップされています。元のExcelファイルの順序は保持されています。</p>
+            <p><strong>中文注意:</strong> 此表格中完全空白的行已跳過。原始Excel檔案的順序已保持。</p>
+            <p><strong>Note:</strong> Completely empty rows are skipped in this table. The original Excel file order is preserved.</p>
+        </div>
+    </div>
+
+    <script>
+        // 元のExcelデータから抽出したLCDメッセージデータ（英文対応追加）
+        // 完全に空の行はスキップ
+        // 添加繁體中文翻譯和英文翻譯
+        const lcdMessages = [
+            {
+                no: 0,
+                event: "火災:走査型検出器発報",
+                eventChinese: "火災:掃描型檢測器發報",
+                lcdDisplay: "火災:走査型検出器発報",
+                lcdDisplayChinese: "火災:掃描型檢測器發報",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ﾊｯﾎﾟｳ",
+                eventNameEnglish: "alarm",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 1,
+                event: "火災:走査型検出器プリアラーム発報",
+                eventChinese: "火災:掃描型檢測器預先發報",
+                lcdDisplay: "火災:走査型検出器プリアラーム発報",
+                lcdDisplayChinese: "火災:掃描型檢測器預先發報",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ﾌﾟﾘｱﾗｰﾑ",
+                eventNameEnglish: "prealarm",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾌﾟﾘｱﾗｰﾑ",
+                recoveryNameEnglish: "prealarm",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "reset"
+            },
+            {
+                no: 2,
+                event: "火災:直結検出器発報",
+                eventChinese: "火災:直結檢測器發報",
+                lcdDisplay: "火災:直結検出器発報",
+                lcdDisplayChinese: "火災:直結檢測器發報",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｶﾝﾁｷ",
+                terminalEnglish: "sensor",
+                eventName: "ﾊｯﾎﾟｳ",
+                eventNameEnglish: "alarm",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 3,
+                event: "火災:直結検出器プリアラーム発報",
+                eventChinese: "火災:直結檢測器預先發報",
+                lcdDisplay: "火災:直結検出器プリアラーム発報",
+                lcdDisplayChinese: "火災:直結檢測器預先發報",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｶﾝﾁｷ",
+                terminalEnglish: "sensor",
+                eventName: "ﾌﾟﾘｱﾗｰﾑ",
+                eventNameEnglish: "prealarm",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾌﾟﾘｱﾗｰﾑ",
+                recoveryNameEnglish: "prealarm",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "reset"
+            },
+            {
+                no: 4,
+                event: "火災:補助検出器発報",
+                eventChinese: "火災:輔助檢測器發報",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 5,
+                event: "火災:補助検出器プリアラーム発報",
+                eventChinese: "火災:輔助檢測器預先發報",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 6,
+                event: "火災:火点位置情報受信",
+                eventChinese: "火災:火點位置資訊接收",
+                lcdDisplay: "火災ステップ受信",
+                lcdDisplayChinese: "火災步驟接收",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 7,
+                event: "許可:自動放水条件成立",
+                eventChinese: "許可:自動放水條件成立",
+                lcdDisplay: "許可:自動放水条件成立",
+                lcdDisplayChinese: "許可:自動放水條件成立",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 8,
+                event: "許可:放水銃選択許可条件成立",
+                eventChinese: "許可:放水槍選擇許可條件成立",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 9,
+                event: "状態:検出器発報後いったん復旧中",
+                eventChinese: "狀態:檢測器發報後暫時復歸中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 10,
+                event: "状態:検出器発報後復旧後再発報",
+                eventChinese: "狀態:檢測器發報後復歸後再發報",
+                lcdDisplay: "状態:検出器発報後復旧後再発報",
+                lcdDisplayChinese: "狀態:檢測器發報後復歸後再發報",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ｻｲﾊｯﾎﾟｳ",
+                eventNameEnglish: "realarm",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 11,
+                event: "状態:検出器起動中",
+                eventChinese: "狀態:檢測器啟動中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 12,
+                event: "状態:システム起動中",
+                eventChinese: "狀態:系統啟動中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 13,
+                event: "状態:ユニット制御盤復旧中",
+                eventChinese: "狀態:單元控制盤復歸中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 14,
+                event: "状態:強制手動モード中",
+                eventChinese: "狀態:強制手動模式中",
+                lcdDisplay: "状態:強制手動モード中",
+                lcdDisplayChinese: "狀態:強制手動模式中",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ｷｮｳｾｲｼｭﾄﾞｳﾓｰﾄﾞ",
+                eventNameEnglish: "manual mode",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｷｮｳｾｲｼｭﾄﾞｳﾓｰﾄﾞ",
+                recoveryNameEnglish: "manual mode",
+                recoveryType: "ｼｭｳﾘｮｳ",
+                recoveryTypeEnglish: "end"
+            },
+            {
+                no: 15,
+                event: "状態:セルフチェック中",
+                eventChinese: "狀態:自我檢查中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 16,
+                event: "状態:近射程",
+                eventChinese: "狀態:近射程",
+                lcdDisplay: "遠射程切替",
+                lcdDisplayChinese: "遠射程切換",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾉｽﾞﾙ",
+                terminalEnglish: "nozzle",
+                eventName: "ｷﾝｼｬﾃｲ",
+                eventNameEnglish: "near range",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 17,
+                event: "状態:遠射程",
+                eventChinese: "狀態:遠射程",
+                lcdDisplay: "近射程切替",
+                lcdDisplayChinese: "近射程切換",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾉｽﾞﾙ",
+                terminalEnglish: "nozzle",
+                eventName: "ｴﾝｼｬﾃｲ",
+                eventNameEnglish: "far range",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 18,
+                event: "状態:射程不定",
+                eventChinese: "狀態:射程不定",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾉｽﾞﾙ",
+                terminalEnglish: "nozzle",
+                eventName: "ｼｬﾃｲﾌﾃｲ",
+                eventNameEnglish: "unsettled range",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 19,
+                event: "ＳＷ:現地点検中",
+                eventChinese: "開關:現地檢查中",
+                lcdDisplay: "ＳＷ:現地点検中",
+                lcdDisplayChinese: "開關:現地檢查中",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ｹﾞﾝﾁﾃﾝｹﾝﾓｰﾄﾞ",
+                eventNameEnglish: "test mode",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｹﾞﾝﾁﾃﾝｹﾝﾓｰﾄﾞ",
+                recoveryNameEnglish: "test mode",
+                recoveryType: "ｼｭｳﾘｮｳ",
+                recoveryTypeEnglish: "end"
+            },
+            {
+                no: 20,
+                event: "ＳＷ:現地メンテモード中",
+                eventChinese: "開關:現地維護模式中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 21,
+                event: "放水:放水実行の有無",
+                eventChinese: "放水:放水執行有無",
+                lcdDisplay: "放水:放水実行の有無",
+                lcdDisplayChinese: "放水:放水執行有無",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ﾎｳｽｲｶｲｼ",
+                eventNameEnglish: "discharge start",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾎｳｽｲﾃｲｼ",
+                recoveryNameEnglish: "discharge stop",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 22,
+                event: "放水:放水停止中",
+                eventChinese: "放水:放水停止中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 23,
+                event: "放水:放水圧上昇操作済み",
+                eventChinese: "放水:放水壓力上升操作完成",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 24,
+                event: "放水:放水圧力一定値超過",
+                eventChinese: "放水:放水壓力一定值超過",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 25,
+                event: "P入力:点検ゲート弁全閉",
+                eventChinese: "P輸入:檢查閘閥全閉",
+                lcdDisplay: "P入力:点検ゲート弁全閉",
+                lcdDisplayChinese: "P輸入:檢查閘閥全閉",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾃﾝｹﾝGV",
+                terminalEnglish: "check GV",
+                eventName: "ｾﾞﾝﾍﾟｲ",
+                eventNameEnglish: "turn off",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｶｲ",
+                recoveryNameEnglish: "opened",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 26,
+                event: "P入力:点検ゲート弁全開",
+                eventChinese: "P輸入:檢查閘閥全開",
+                lcdDisplay: "P入力:点検ゲート弁全開",
+                lcdDisplayChinese: "P輸入:檢查閘閥全開",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾃﾝｹﾝGV",
+                terminalEnglish: "check GV",
+                eventName: "ｾﾞﾝｶｲ",
+                eventNameEnglish: "turn open",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｶｲ",
+                recoveryNameEnglish: "opened",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 27,
+                event: "P入力:ノズル前",
+                eventChinese: "P輸入:噴嘴前",
+                lcdDisplay: "P入力:ノズル前",
+                lcdDisplayChinese: "P輸入:噴嘴前",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾉｽﾞﾙ",
+                terminalEnglish: "nozzle",
+                eventName: "ｾﾞﾝﾎﾟｳ",
+                eventNameEnglish: "in front",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｺｳﾎｳ",
+                recoveryNameEnglish: "backward",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 28,
+                event: "P入力:放水銃火点方向",
+                eventChinese: "P輸入:放水槍火點方向",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 29,
+                event: "P入力:放水銃左旋回リミット",
+                eventChinese: "P輸入:放水槍左旋轉極限",
+                lcdDisplay: "P入力:放水銃左旋回リミット",
+                lcdDisplayChinese: "P輸入:放水槍左旋轉極限",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 30,
+                event: "P入力:放水銃右旋回リミット",
+                eventChinese: "P輸入:放水槍右旋轉極限",
+                lcdDisplay: "P入力:放水銃右旋回リミット",
+                lcdDisplayChinese: "P輸入:放水槍右旋轉極限",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾉｽﾞﾙ",
+                terminalEnglish: "nozzle",
+                eventName: "ｶｸﾉｳｲﾁ",
+                eventNameEnglish: "position",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 31,
+                event: "セルフチェック正常",
+                eventChinese: "自我檢查正常",
+                lcdDisplay: "セルフチェック正常",
+                lcdDisplayChinese: "自我檢查正常",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ｾﾙﾌﾁｪｯｸOK",
+                eventNameEnglish: "selfcheck OK",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 32,
+                event: "放水銃火点方向旋回完了",
+                eventChinese: "放水槍火點方向旋轉完成",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 33,
+                event: "(予約)",
+                eventChinese: "(預約)",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 34,
+                event: "マスターライン障害",
+                eventChinese: "主線故障",
+                lcdDisplay: "マスターライン障害",
+                lcdDisplayChinese: "主線故障",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ﾗｲﾝｼｮｳｶﾞｲ",
+                eventNameEnglish: "line fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾗｲﾝｼｮｳｶﾞｲ",
+                recoveryNameEnglish: "line fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 35,
+                event: "検出器ライン障害",
+                eventChinese: "檢測器線路故障",
+                lcdDisplay: "検出器ライン障害",
+                lcdDisplayChinese: "檢測器線路故障",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ﾗｲﾝｼｮｳｶﾞｲ",
+                eventNameEnglish: "line fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾗｲﾝｼｮｳｶﾞｲ",
+                recoveryNameEnglish: "line fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 36,
+                event: "現地操作部間伝送障害",
+                eventChinese: "現地操作部間傳送故障",
+                lcdDisplay: "現地操作部間伝送障害",
+                lcdDisplayChinese: "現地操作部間傳送故障",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｿｳｻﾌﾞ",
+                terminalEnglish: "L-panel",
+                eventName: "ﾃﾞﾝｿｳｼｮｳｶﾞｲ",
+                eventNameEnglish: "transmission fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾃﾞﾝｿｳｼｮｳｶﾞｲ",
+                recoveryNameEnglish: "transmission fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 37,
+                event: "垂直異常停止",
+                eventChinese: "垂直異常停止",
+                lcdDisplay: "垂直異常停止",
+                lcdDisplayChinese: "垂直異常停止",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ｽｲﾁｮｸｲｼﾞｮｳﾃｲｼ",
+                eventNameEnglish: "vertical fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｽｲﾁｮｸｲｼﾞｮｳﾃｲｼ",
+                recoveryNameEnglish: "vertical fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 38,
+                event: "垂直同期異常",
+                eventChinese: "垂直同步異常",
+                lcdDisplay: "垂直同期異常",
+                lcdDisplayChinese: "垂直同步異常",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ｽｲﾁｮｸﾄﾞｳｷｲｼﾞｮｳ",
+                eventNameEnglish: "vertical sync. Fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｽｲﾁｮｸﾄﾞｳｷｲｼﾞｮｳ",
+                recoveryNameEnglish: "vertical sync. Fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 39,
+                event: "水平旋回異常",
+                eventChinese: "水平旋轉異常",
+                lcdDisplay: "水平旋回異常",
+                lcdDisplayChinese: "水平旋轉異常",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ｽｲﾍｲｾﾝｶｲｲｼﾞｮｳ",
+                eventNameEnglish: "level turning fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｽｲﾍｲｾﾝｶｲｲｼﾞｮｳ",
+                recoveryNameEnglish: "level turning fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 40,
+                event: "素子チェック異常",
+                eventChinese: "元件檢查異常",
+                lcdDisplay: "素子チェック異常",
+                lcdDisplayChinese: "元件檢查異常",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ｿｼﾁｪｯｸｲｼﾞｮｳ",
+                eventNameEnglish: "element check fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 41,
+                event: "温度異常",
+                eventChinese: "溫度異常",
+                lcdDisplay: "温度異常",
+                lcdDisplayChinese: "溫度異常",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ｵﾝﾄﾞｲｼﾞｮｳ",
+                eventNameEnglish: "thermal fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｵﾝﾄﾞｲｼﾞｮｳ",
+                recoveryNameEnglish: "thermal fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 42,
+                event: "０度非常停止",
+                eventChinese: "０度非常停止",
+                lcdDisplay: "０度非常停止",
+                lcdDisplayChinese: "０度非常停止",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "0ﾄﾞﾋｼﾞｮｳﾃｲｼ",
+                eventNameEnglish: "zero degree fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 43,
+                event: "２０５度非常停止",
+                eventChinese: "２０５度非常停止",
+                lcdDisplay: "２０５度非常停止",
+                lcdDisplayChinese: "２０５度非常停止",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "205ﾄﾞﾋｼﾞｮｳﾃｲｼ",
+                eventNameEnglish: "205 degrees fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 44,
+                event: "走査型検出器障害用予備①",
+                eventChinese: "掃描型檢測器故障用預備①",
+                lcdDisplay: "走査型検出器障害用予備①",
+                lcdDisplayChinese: "掃描型檢測器故障用預備①",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ﾖﾋﾞｲｼﾞｮｳ",
+                eventNameEnglish: "fault(spare)",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾖﾋﾞｲｼﾞｮｳ",
+                recoveryNameEnglish: "fault(spare)",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 45,
+                event: "走査型検出器障害用予備②",
+                eventChinese: "掃描型檢測器故障用預備②",
+                lcdDisplay: "走査型検出器障害用予備②",
+                lcdDisplayChinese: "掃描型檢測器故障用預備②",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ﾖﾋﾞｲｼﾞｮｳ",
+                eventNameEnglish: "fault(spare)",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾖﾋﾞｲｼﾞｮｳ",
+                recoveryNameEnglish: "fault(spare)",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 46,
+                event: "走査型検出器障害用予備③",
+                eventChinese: "掃描型檢測器故障用預備③",
+                lcdDisplay: "走査型検出器障害用予備③",
+                lcdDisplayChinese: "掃描型檢測器故障用預備③",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ﾖﾋﾞｲｼﾞｮｳ",
+                eventNameEnglish: "fault(spare)",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾖﾋﾞｲｼﾞｮｳ",
+                recoveryNameEnglish: "fault(spare)",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 47,
+                event: "走査型検出器障害用予備④",
+                eventChinese: "掃描型檢測器故障用預備④",
+                lcdDisplay: "走査型検出器障害用予備④",
+                lcdDisplayChinese: "掃描型檢測器故障用預備④",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ﾖﾋﾞｲｼﾞｮｳ",
+                eventNameEnglish: "fault(spare)",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾖﾋﾞｲｼﾞｮｳ",
+                recoveryNameEnglish: "fault(spare)",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 48,
+                event: "走査型検出器障害用予備⑤",
+                eventChinese: "掃描型檢測器故障用預備⑤",
+                lcdDisplay: "走査型検出器障害用予備⑤",
+                lcdDisplayChinese: "掃描型檢測器故障用預備⑤",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ﾖﾋﾞｲｼﾞｮｳ",
+                eventNameEnglish: "fault(spare)",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾖﾋﾞｲｼﾞｮｳ",
+                recoveryNameEnglish: "fault(spare)",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 49,
+                event: "走査型検出器障害用予備⑥",
+                eventChinese: "掃描型檢測器故障用預備⑥",
+                lcdDisplay: "走査型検出器障害用予備⑥",
+                lcdDisplayChinese: "掃描型檢測器故障用預備⑥",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ﾖﾋﾞｲｼﾞｮｳ",
+                eventNameEnglish: "fault(spare)",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾖﾋﾞｲｼﾞｮｳ",
+                recoveryNameEnglish: "fault(spare)",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 50,
+                event: "走査型検出器障害用予備⑦",
+                eventChinese: "掃描型檢測器故障用預備⑦",
+                lcdDisplay: "走査型検出器障害用予備⑦",
+                lcdDisplayChinese: "掃描型檢測器故障用預備⑦",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ﾖﾋﾞｲｼﾞｮｳ",
+                eventNameEnglish: "fault(spare)",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾖﾋﾞｲｼﾞｮｳ",
+                recoveryNameEnglish: "fault(spare)",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 51,
+                event: "ＭＣＰＵ異常",
+                eventChinese: "ＭＣＰＵ異常",
+                lcdDisplay: "ＭＣＰＵ異常",
+                lcdDisplayChinese: "ＭＣＰＵ異常",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "MCPUｲｼﾞｮｳ",
+                eventNameEnglish: "MCPU fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "MCPUｲｼﾞｮｳ",
+                recoveryNameEnglish: "MCPU fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 52,
+                event: "セルフチェック異常１",
+                eventChinese: "自我檢查異常１",
+                lcdDisplay: "セルフチェック異常１",
+                lcdDisplayChinese: "自我檢查異常１",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ｾﾙﾌﾁｪｯｸNG1 ﾏﾄﾞﾖｺﾞﾚ",
+                eventNameEnglish: "selfcheck NG1 window",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 53,
+                event: "セルフチェック異常２",
+                eventChinese: "自我檢查異常２",
+                lcdDisplay: "セルフチェック異常２",
+                lcdDisplayChinese: "自我檢查異常２",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ｾﾙﾌﾁｪｯｸNG2 ﾗﾝﾌｷﾞﾚ",
+                eventNameEnglish: "selfcheck NG2 lump",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 54,
+                event: "セルフチェック異常３",
+                eventChinese: "自我檢查異常３",
+                lcdDisplay: "セルフチェック異常３",
+                lcdDisplayChinese: "自我檢查異常３",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ｾﾙﾌﾁｪｯｸNG3",
+                eventNameEnglish: "selfcheck NG3",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｾﾙﾌﾁｪｯｸNG3",
+                recoveryNameEnglish: "selfcheck NG3",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 55,
+                event: "点検ゲート弁開閉信号異常",
+                eventChinese: "檢查閘閥開閉信號異常",
+                lcdDisplay: "点検ゲート弁開閉信号異常",
+                lcdDisplayChinese: "檢查閘閥開閉信號異常",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾃﾝｹﾝGV",
+                terminalEnglish: "check GV",
+                eventName: "ｶｲﾍｲｼﾝｺﾞｳｲｼﾞｮｳ",
+                eventNameEnglish: "test G-valve fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｶｲﾍｲｼﾝｺﾞｳｲｼﾞｮｳ",
+                recoveryNameEnglish: "SW signal fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 56,
+                event: "感知器ライン障害",
+                eventChinese: "感知器線路故障",
+                lcdDisplay: "感知器ライン障害",
+                lcdDisplayChinese: "感知器線路故障",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｶﾝﾁｷ",
+                terminalEnglish: "battery",
+                eventName: "ﾗｲﾝｼｮｳｶﾞｲ",
+                eventNameEnglish: "det line fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾗｲﾝｼｮｳｶﾞｲ",
+                recoveryNameEnglish: "det line fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 57,
+                event: "予備電源なし",
+                eventChinese: "備用電源無",
+                lcdDisplay: "予備電源なし",
+                lcdDisplayChinese: "備用電源無",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾊﾞｯﾃﾘ",
+                terminalEnglish: "battery",
+                eventName: "ﾐｾﾂｿﾞｸ",
+                eventNameEnglish: "Disconnected",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾐｾﾂｿﾞｸ",
+                recoveryNameEnglish: "Disconnected",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 58,
+                event: "予備電源ＬＯＷ",
+                eventChinese: "備用電源低電壓",
+                lcdDisplay: "予備電源ＬＯＷ",
+                lcdDisplayChinese: "備用電源低電壓",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾊﾞｯﾃﾘ",
+                terminalEnglish: "battery",
+                eventName: "ﾃﾞﾝｱﾂﾃｲｶ",
+                eventNameEnglish: "low voltage",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾃﾞﾝｱﾂﾃｲｶ",
+                recoveryNameEnglish: "low voltage",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 59,
+                event: "ＡＣ電源異常",
+                eventChinese: "ＡＣ電源異常",
+                lcdDisplay: "ＡＣ電源異常",
+                lcdDisplayChinese: "ＡＣ電源異常",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ACﾃﾞﾝｹﾞﾝﾀﾞﾝ",
+                eventNameEnglish: "AC power fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ACﾃﾞﾝｹﾞﾝﾀﾞﾝ",
+                recoveryNameEnglish: "AC power down",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 60,
+                event: "検出器起動失敗",
+                eventChinese: "檢測器啟動失敗",
+                lcdDisplay: "検出器起動失敗",
+                lcdDisplayChinese: "檢測器啟動失敗",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ｷﾄﾞｳｲｼﾞｮｳ",
+                eventNameEnglish: "starting fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 61,
+                event: "放水異常",
+                eventChinese: "放水異常",
+                lcdDisplay: "放水異常",
+                lcdDisplayChinese: "放水異常",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ﾎｳｽｲｲｼﾞｮｳ",
+                eventNameEnglish: "discharge fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾎｳｽｲｲｼﾞｮｳ",
+                recoveryNameEnglish: "discharge fault",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 62,
+                event: "放水中でないときに圧力値上昇",
+                eventChinese: "非放水時壓力值上升",
+                lcdDisplay: "放水中でないときに圧力値上昇",
+                lcdDisplayChinese: "非放水時壓力值上升",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ﾎｳｽｲｼﾝｺﾞｳ",
+                eventNameEnglish: "discharge signal",
+                eventType: "ｼﾞｭｼﾝ",
+                eventTypeEnglish: "rec.",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 63,
+                event: "走査型火災検出器電源異常",
+                eventChinese: "掃描型火災檢測器電源異常",
+                lcdDisplay: "走査型火災検出器電源異常",
+                lcdDisplayChinese: "掃描型火災檢測器電源異常",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｹﾝｼｭﾂｷ",
+                terminalEnglish: "detector",
+                eventName: "ﾃﾞﾝｹﾞﾝｲｼﾞｮｳ",
+                eventNameEnglish: "power fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾃﾞﾝｹﾞﾝｲｼﾞｮｳ",
+                recoveryNameEnglish: "power fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 64,
+                event: "ポンプ運転ヒューズ切れ",
+                eventChinese: "泵運轉保險絲斷線",
+                lcdDisplay: "ポンプ運転ヒューズ切れ",
+                lcdDisplayChinese: "泵運轉保險絲斷線",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ﾎﾟﾝﾌﾟMﾋｭｰｽﾞｷﾞﾚ",
+                eventNameEnglish: "pump M-fuse break",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾎﾟﾝﾌﾟMﾋｭｰｽﾞｷﾞﾚ",
+                recoveryNameEnglish: "pump M-fuse break",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 65,
+                event: "現地操作部ヒューズ切れ",
+                eventChinese: "現地操作部保險絲斷線",
+                lcdDisplay: "現地操作部ヒューズ切れ",
+                lcdDisplayChinese: "現地操作部保險絲斷線",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ｿｳｻﾌﾞﾋｭｰｽﾞｷﾞﾚ",
+                eventNameEnglish: "control fuse break",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｿｳｻﾌﾞﾋｭｰｽﾞｷﾞﾚ",
+                recoveryNameEnglish: "control fuse break",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 66,
+                event: "付属電源ヒューズ切れ",
+                eventChinese: "附屬電源保險絲斷線",
+                lcdDisplay: "付属電源ヒューズ切れ",
+                lcdDisplayChinese: "附屬電源保險絲斷線",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ﾌｿﾞｸPOWﾋｭｰｽﾞｷﾞﾚ",
+                eventNameEnglish: "acc power fuse break",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾌｿﾞｸPOWﾋｭｰｽﾞｷﾞﾚ",
+                recoveryNameEnglish: "acc power fuse break",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 67,
+                event: "旋回モータヒューズ切れ",
+                eventChinese: "旋轉馬達保險絲斷線",
+                lcdDisplay: "旋回モータヒューズ切れ",
+                lcdDisplayChinese: "旋轉馬達保險絲斷線",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ｾﾝｶｲﾓｰﾀﾋｭｰｽﾞｷﾞﾚ",
+                eventNameEnglish: "turn motor fuse break",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｾﾝｶｲﾓｰﾀﾋｭｰｽﾞｷﾞﾚ",
+                recoveryNameEnglish: "turn motor fuse break",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 68,
+                event: "射程モータヒューズ切れ",
+                eventChinese: "射程馬達保險絲斷線",
+                lcdDisplay: "射程モータヒューズ切れ",
+                lcdDisplayChinese: "射程馬達保險絲斷線",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ｼｬﾃｲﾓｰﾀﾋｭｰｽﾞｷﾞﾚ",
+                eventNameEnglish: "range motor fuse break",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｼｬﾃｲﾓｰﾀﾋｭｰｽﾞｷﾞﾚ",
+                recoveryNameEnglish: "range motor fuse break",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 69,
+                event: "電動弁ヒューズ切れ",
+                eventChinese: "電動閥保險絲斷線",
+                lcdDisplay: "電動弁ヒューズ切れ",
+                lcdDisplayChinese: "電動閥保險絲斷線",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ﾃﾞﾝﾄﾞｳVﾋｭｰｽﾞｷﾞﾚ",
+                eventNameEnglish: "E-valve fuse break",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾃﾞﾝﾄﾞｳVﾋｭｰｽﾞｷﾞﾚ",
+                recoveryNameEnglish: "E-valve fuse break",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 70,
+                event: "一斉開放弁(起動線)断線",
+                eventChinese: "一齊開放閥(啟動線)斷線",
+                lcdDisplay: "一斉開放弁(起動線)断線",
+                lcdDisplayChinese: "一齊開放閥(啟動線)斷線",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｶｲﾎｳV",
+                terminalEnglish: "d-valve",
+                eventName: "ﾀﾞﾝｾﾝ",
+                eventNameEnglish: "Disconnected",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾀﾞﾝｾﾝ",
+                recoveryNameEnglish: "Disconnected",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 71,
+                event: "圧力スイッチ断線",
+                eventChinese: "壓力開關斷線",
+                lcdDisplay: "圧力スイッチ断線",
+                lcdDisplayChinese: "壓力開關斷線",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｱﾂSW",
+                terminalEnglish: "p-sw",
+                eventName: "ﾀﾞﾝｾﾝ",
+                eventNameEnglish: "Disconnected",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾀﾞﾝｾﾝ",
+                recoveryNameEnglish: "Disconnected",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 72,
+                event: "遠射程／近射程リミット同時オン",
+                eventChinese: "遠射程／近射程極限同時ON",
+                lcdDisplay: "遠射程／近射程リミット同時オン",
+                lcdDisplayChinese: "遠射程／近射程極限同時ON",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ｼｬﾃｲﾘﾐｯﾄｲｼﾞｮｳ",
+                eventNameEnglish: "range limit fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｼｬﾃｲﾘﾐｯﾄｲｼﾞｮｳ",
+                recoveryNameEnglish: "range limit fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 73,
+                event: "放水銃旋回異常",
+                eventChinese: "放水槍旋轉異常",
+                lcdDisplay: "放水銃旋回異常",
+                lcdDisplayChinese: "放水槍旋轉異常",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾉｽﾞﾙ",
+                terminalEnglish: "nozzle",
+                eventName: "ｾﾝｶｲｲｼﾞｮｳ",
+                eventNameEnglish: "turning fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｾﾝｶｲｲｼﾞｮｳ",
+                recoveryNameEnglish: "turning fault",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 74,
+                event: "放水銃自動旋回完了できず",
+                eventChinese: "放水槍自動旋轉無法完成",
+                lcdDisplay: "放水銃自動旋回完了できず",
+                lcdDisplayChinese: "放水槍自動旋轉無法完成",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾉｽﾞﾙ",
+                terminalEnglish: "nozzle",
+                eventName: "ｼﾞﾄﾞｳｾﾝｶｲｶﾝﾘｮｳｾｽﾞ",
+                eventNameEnglish: "auto-turning fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｼﾞﾄﾞｳｾﾝｶｲｶﾝﾘｮｳｾｽﾞ",
+                recoveryNameEnglish: "auto-turning fault",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 75,
+                event: "一斉開放弁開確認できず",
+                eventChinese: "一齊開放閥開啟無法確認",
+                lcdDisplay: "一斉開放弁開確認できず",
+                lcdDisplayChinese: "一齊開放閥開啟無法確認",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｶｲﾎｳV",
+                terminalEnglish: "d-valve",
+                eventName: "ｶｲ ｶｸﾆﾝﾃﾞｷｽﾞ",
+                eventNameEnglish: "open nonresponse",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｶｲ ｶｸﾆﾝﾃﾞｷｽﾞ",
+                recoveryNameEnglish: "open nonresponse",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 76,
+                event: "一斉開放弁閉確認できず",
+                eventChinese: "一齊開放閥關閉無法確認",
+                lcdDisplay: "一斉開放弁閉確認できず",
+                lcdDisplayChinese: "一齊開放閥關閉無法確認",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｶｲﾎｳV",
+                terminalEnglish: "d-valve",
+                eventName: "ﾍｲ ｶｸﾆﾝﾃﾞｷｽﾞ",
+                eventNameEnglish: "close nonresponse",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾍｲ ｶｸﾆﾝﾃﾞｷｽﾞ",
+                recoveryNameEnglish: "close nonresponse",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 77,
+                event: "近射程制御できず",
+                eventChinese: "近射程無法控制",
+                lcdDisplay: "近射程制御できず",
+                lcdDisplayChinese: "近射程無法控制",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ｷﾝｼｬﾃｲ ｾｲｷﾞｮｲｼﾞｮｳ",
+                eventNameEnglish: "N-range uncontroled",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｷﾝｼｬﾃｲ ｾｲｷﾞｮｲｼﾞｮｳ",
+                recoveryNameEnglish: "N-limit uncontroled",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 78,
+                event: "遠射程制御できず",
+                eventChinese: "遠射程無法控制",
+                lcdDisplay: "遠射程制御できず",
+                lcdDisplayChinese: "遠射程無法控制",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ｴﾝｼｬﾃｲ ｾｲｷﾞｮｲｼﾞｮｳ",
+                eventNameEnglish: "F-range uncontroled",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｴﾝｼｬﾃｲ ｾｲｷﾞｮｲｼﾞｮｳ",
+                recoveryNameEnglish: "F-range uncontroled",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 79,
+                event: "左旋回リミット",
+                eventChinese: "左旋轉極限",
+                lcdDisplay: "左旋回リミット",
+                lcdDisplayChinese: "左旋轉極限",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾉｽﾞﾙ",
+                terminalEnglish: "nozzle",
+                eventName: "ｾﾝｶｲﾘﾐｯﾄ",
+                eventNameEnglish: "turning limit",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｾﾝｶｲﾘﾐｯﾄ",
+                recoveryNameEnglish: "turning limit",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 80,
+                event: "右旋回リミット",
+                eventChinese: "右旋轉極限",
+                lcdDisplay: "右旋回リミット",
+                lcdDisplayChinese: "右旋轉極限",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾉｽﾞﾙ",
+                terminalEnglish: "nozzle",
+                eventName: "ｾﾝｶｲﾘﾐｯﾄ",
+                eventNameEnglish: "turning limit",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｾﾝｶｲﾘﾐｯﾄ",
+                recoveryNameEnglish: "turning limit",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 81,
+                event: "エンコーダ異常①エンコーダステータス異常",
+                eventChinese: "編碼器異常①編碼器狀態異常",
+                lcdDisplay: "エンコーダ異常①エンコーダステータス異常",
+                lcdDisplayChinese: "編碼器異常①編碼器狀態異常",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｴﾝｺｰﾀﾞ",
+                terminalEnglish: "encoder",
+                eventName: "ｲｼﾞｮｳ",
+                eventNameEnglish: "fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｲｼﾞｮｳ",
+                recoveryNameEnglish: "fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 82,
+                event: "エンコーダ異常②エンコーダ通信異常",
+                eventChinese: "編碼器異常②編碼器通信異常",
+                lcdDisplay: "エンコーダ異常②エンコーダ通信異常",
+                lcdDisplayChinese: "編碼器異常②編碼器通信異常",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｴﾝｺｰﾀﾞ",
+                terminalEnglish: "encoder",
+                eventName: "ﾃﾞﾝｿｳｼｮｳｶﾞｲ",
+                eventNameEnglish: "transmission fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾃﾞﾝｿｳｼｮｳｶﾞｲ",
+                recoveryNameEnglish: "transmission fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 83,
+                event: "エンコーダ異常③エンコーダ値読み取り失敗",
+                eventChinese: "編碼器異常③編碼器值讀取失敗",
+                lcdDisplay: "放水異常",
+                lcdDisplayChinese: "放水異常",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ｴﾝｺｰﾀﾞ",
+                terminalEnglish: "encoder",
+                eventName: "ﾖﾐﾄﾘｼｯﾊﾟｲ",
+                eventNameEnglish: "decoding failure",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 84,
+                event: "遠リミット断線",
+                eventChinese: "遠極限斷線",
+                lcdDisplay: "遠リミット断線",
+                lcdDisplayChinese: "遠極限斷線",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾉｽﾞﾙ",
+                terminalEnglish: "nozzle",
+                eventName: "ｴﾝｼｬﾃｲﾘﾐｯﾄﾀﾞﾝｾﾝ",
+                eventNameEnglish: "F-limit Disconnected",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｴﾝｼｬﾃｲﾘﾐｯﾄﾀﾞﾝｾﾝ",
+                recoveryNameEnglish: "F-limit Disconnected",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 85,
+                event: "近リミット断線",
+                eventChinese: "近極限斷線",
+                lcdDisplay: "近リミット断線",
+                lcdDisplayChinese: "近極限斷線",
+                panel: "ﾕﾆｯﾄx",
+                panelEnglish: "unit x",
+                terminal: "ﾉｽﾞﾙ",
+                terminalEnglish: "nozzle",
+                eventName: "ｷﾝｼｬﾃｲﾘﾐｯﾄﾀﾞﾝｾﾝ",
+                eventNameEnglish: "N-limit Disconnected",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ｷﾝｼｬﾃｲﾘﾐｯﾄﾀﾞﾝｾﾝ",
+                recoveryNameEnglish: "N-limit Disconnected",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 100,
+                event: "状態:マスター制御盤起動",
+                eventChinese: "狀態:主控制盤啟動",
+                lcdDisplay: "状態:マスター制御盤起動",
+                lcdDisplayChinese: "狀態:主控制盤啟動",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "Power ON",
+                eventNameEnglish: "Power ON",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 101,
+                event: "状態:自動放水猶予中",
+                eventChinese: "狀態:自動放水延遲中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 102,
+                event: "状態:自動放水中",
+                eventChinese: "狀態:自動放水中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 103,
+                event: "状態:放水停止制御中",
+                eventChinese: "狀態:放水停止控制中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 104,
+                event: "状態:システム復旧中",
+                eventChinese: "狀態:系統復歸中",
+                lcdDisplay: "状態:システム復旧中",
+                lcdDisplayChinese: "狀態:系統復歸中",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ｼｽﾃﾑ",
+                terminalEnglish: "system",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾌｯｷｭｳ",
+                recoveryNameEnglish: "reset",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 105,
+                event: "状態:予備電源試験中",
+                eventChinese: "狀態:備用電源測試中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 106,
+                event: "状態:自動セルフチェック中",
+                eventChinese: "狀態:自動自我檢查中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 107,
+                event: "状態:手動セルフチェック中",
+                eventChinese: "狀態:手動自我檢查中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 108,
+                event: "状態:システムデータ受信中",
+                eventChinese: "狀態:系統資料接收中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 109,
+                event: "状態:履歴データ送信中",
+                eventChinese: "狀態:歷史資料傳送中",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 110,
+                event: "ＳＷ:ユニット制御盤#n 被選択",
+                eventChinese: "開關:單元控制盤#n 被選擇",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 111,
+                event: "ＳＷ:操作権 ユニット制御盤＃ｎ現地操作部",
+                eventChinese: "開關:操作權 單元控制盤＃ｎ現地操作部",
+                lcdDisplay: "ＳＷ:操作権",
+                lcdDisplayChinese: "開關:操作權",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ﾕﾆｯﾄx",
+                terminalEnglish: "unit x",
+                eventName: "ｿｳｻﾌﾞｿｳｻｹﾝ",
+                eventNameEnglish: "Control authority",
+                eventType: "ｼｭﾄｸ",
+                eventTypeEnglish: "obtain",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 112,
+                event: "(ＳＷ:操作権 ユニット制御盤＃ｎ現地操作卓２)",
+                eventChinese: "(開關:操作權 單元控制盤＃ｎ現地操作台２)",
+                lcdDisplay: "ＳＷ:操作権",
+                lcdDisplayChinese: "開關:操作權",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ﾕﾆｯﾄx",
+                terminalEnglish: "unit x",
+                eventName: "ｿｳｻﾌﾞｿｳｻｹﾝ",
+                eventNameEnglish: "Control authority",
+                eventType: "ｼｭﾄｸ",
+                eventTypeEnglish: "obtain",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 113,
+                event: "ＳＷ:操作権 中央操作卓",
+                eventChinese: "開關:操作權 中央操作台",
+                lcdDisplay: "ＳＷ:操作権",
+                lcdDisplayChinese: "開關:操作權",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ﾏｽﾀ-ﾊﾞﾝ",
+                terminalEnglish: "M-panel",
+                eventName: "ﾁｭｳｵｳｿｳｻｹﾝ",
+                eventNameEnglish: "Control authority",
+                eventType: "ｼｭﾄｸ",
+                eventTypeEnglish: "obtain",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 114,
+                event: "ＳＷ:緊急停止",
+                eventChinese: "開關:緊急停止",
+                lcdDisplay: "ＳＷ:緊急停止",
+                lcdDisplayChinese: "開關:緊急停止",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ｷﾝｷｭｳﾃｲｼ",
+                eventNameEnglish: "Emergency stop",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 115,
+                event: "ＳＷ:自動放水モード",
+                eventChinese: "開關:自動放水模式",
+                lcdDisplay: "ＳＷ:自動放水モード",
+                lcdDisplayChinese: "開關:自動放水模式",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ｼﾞﾄﾞｳﾎｳｽｲﾓｰﾄﾞ",
+                eventNameEnglish: "Automatic mode",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 116,
+                event: "ＳＷ:自動旋回モード",
+                eventChinese: "開關:自動旋轉模式",
+                lcdDisplay: "ＳＷ:自動旋回モード",
+                lcdDisplayChinese: "開關:自動旋轉模式",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ｼﾞﾄﾞｳｾﾝｶｲﾓｰﾄﾞ",
+                eventNameEnglish: "Automatic mode",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 117,
+                event: "ＳＷ:手動モード",
+                eventChinese: "開關:手動模式",
+                lcdDisplay: "ＳＷ:手動モード",
+                lcdDisplayChinese: "開關:手動模式",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ｼｭﾄﾞｳﾓｰﾄﾞ",
+                eventNameEnglish: "manual mode",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 118,
+                event: "ＳＷ:システム逐次音響停止",
+                eventChinese: "開關:系統逐次音響停止",
+                lcdDisplay: "ＳＷ:システム逐次音響停止",
+                lcdDisplayChinese: "開關:系統逐次音響停止",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 119,
+                event: "ＳＷ:システム移報停止",
+                eventChinese: "開關:系統移報停止",
+                lcdDisplay: "ＳＷ:システム移報停止",
+                lcdDisplayChinese: "開關:系統移報停止",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 120,
+                event: "ＳＷ:ＬＣＤサブモード「逐次」",
+                eventChinese: "開關:ＬＣＤ子模式「逐次」",
+                lcdDisplay: "ＳＷ:ＬＣＤサブモード「逐次」",
+                lcdDisplayChinese: "開關:ＬＣＤ子模式「逐次」",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 121,
+                event: "ＳＷ:ＬＣＤサブモード「状態」",
+                eventChinese: "開關:ＬＣＤ子模式「狀態」",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 122,
+                event: "ＳＷ:ＬＣＤサブモード「設定」",
+                eventChinese: "開關:ＬＣＤ子模式「設定」",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 123,
+                event: "ＳＷ:メンテモード",
+                eventChinese: "開關:維護模式",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 124,
+                event: "ＳＷ:システム完全音響停止",
+                eventChinese: "開關:系統完全音響停止",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 125,
+                event: "ＳＷ:自火報移報入力遮断",
+                eventChinese: "開關:自火報移報輸入遮斷",
+                lcdDisplay: "ＳＷ:自火報移報入力遮断",
+                lcdDisplayChinese: "開關:自火報移報輸入遮斷",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 126,
+                event: "ＳＷ:一括点検モード",
+                eventChinese: "開關:一括檢查模式",
+                lcdDisplay: "ＳＷ:一括点検モード",
+                lcdDisplayChinese: "開關:一括檢查模式",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 127,
+                event: "ＳＷ:ユニット制御盤＃ｎ ユニットマスク",
+                eventChinese: "開關:單元控制盤＃ｎ 單元遮蔽",
+                lcdDisplay: "ＳＷ:ユニット制御盤＃ｎ",
+                lcdDisplayChinese: "開關:單元控制盤＃ｎ",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 128,
+                event: "ＳＷ:ユニット制御盤＃ｎ センサマスク",
+                eventChinese: "開關:單元控制盤＃ｎ 感測器遮蔽",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 129,
+                event: "ＳＷ:ディフォルトモード設定",
+                eventChinese: "開關:預設模式設定",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 130,
+                event: "ＳＷ:自動放水開始条件設定",
+                eventChinese: "開關:自動放水開始條件設定",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 131,
+                event: "ＳＷ:自動放水自動停止の有無設定",
+                eventChinese: "開關:自動放水自動停止有無設定",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 132,
+                event: "ＳＷ:自動放水開始猶予時間設定",
+                eventChinese: "開關:自動放水開始延遲時間設定",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 133,
+                event: "ＳＷ:自動放水継続時間設定",
+                eventChinese: "開關:自動放水持續時間設定",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 134,
+                event: "ＳＷ:システム時刻設定",
+                eventChinese: "開關:系統時間設定",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 135,
+                event: "Ｐ入力:ＮＶリレー状態",
+                eventChinese: "Ｐ輸入:ＮＶ繼電器狀態",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 136,
+                event: "Ｐ入力:火災移報入力＃１",
+                eventChinese: "Ｐ輸入:火災移報輸入＃１",
+                lcdDisplay: "P入力:火災移報入力",
+                lcdDisplayChinese: "P輸入:火災移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ﾏｽﾀ-ﾊﾞﾝ",
+                terminalEnglish: "M-panel",
+                eventName: "ｶｻｲｲﾎｳ1",
+                eventNameEnglish: "FA Interlock #1",
+                eventType: "ｼﾞｭｼﾝ",
+                eventTypeEnglish: "rec.",
+                recoveryName: "ｶｻｲｲﾎｳ1",
+                recoveryNameEnglish: "FA Interlock #1",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "reset"
+            },
+            {
+                no: 137,
+                event: "Ｐ入力:火災移報入力＃１",
+                eventChinese: "Ｐ輸入:火災移報輸入＃１",
+                lcdDisplay: "P入力:火災移報入力",
+                lcdDisplayChinese: "P輸入:火災移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ﾏｽﾀ-ﾊﾞﾝ",
+                terminalEnglish: "M-panel",
+                eventName: "ｶｻｲｲﾎｳ2",
+                eventNameEnglish: "FA Interlock #2",
+                eventType: "ｼﾞｭｼﾝ",
+                eventTypeEnglish: "rec.",
+                recoveryName: "ｶｻｲｲﾎｳ2",
+                recoveryNameEnglish: "FA Interlock #2",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "reset"
+            },
+            {
+                no: 138,
+                event: "Ｐ入力:火災移報入力＃１",
+                eventChinese: "Ｐ輸入:火災移報輸入＃１",
+                lcdDisplay: "P入力:火災移報入力",
+                lcdDisplayChinese: "P輸入:火災移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ﾏｽﾀ-ﾊﾞﾝ",
+                terminalEnglish: "M-panel",
+                eventName: "ｶｻｲｲﾎｳ3",
+                eventNameEnglish: "FA Interlock #3",
+                eventType: "ｼﾞｭｼﾝ",
+                eventTypeEnglish: "rec.",
+                recoveryName: "ｶｻｲｲﾎｳ3",
+                recoveryNameEnglish: "FA Interlock #3",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "reset"
+            },
+            {
+                no: 139,
+                event: "Ｐ入力:火災移報入力＃１",
+                eventChinese: "Ｐ輸入:火災移報輸入＃１",
+                lcdDisplay: "P入力:火災移報入力",
+                lcdDisplayChinese: "P輸入:火災移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ﾏｽﾀ-ﾊﾞﾝ",
+                terminalEnglish: "M-panel",
+                eventName: "ｶｻｲｲﾎｳ4",
+                eventNameEnglish: "FA Interlock #4",
+                eventType: "ｼﾞｭｼﾝ",
+                eventTypeEnglish: "rec.",
+                recoveryName: "ｶｻｲｲﾎｳ4",
+                recoveryNameEnglish: "FA Interlock #4",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "reset"
+            },
+            {
+                no: 140,
+                event: "Ｐ入力:火災移報入力＃１",
+                eventChinese: "Ｐ輸入:火災移報輸入＃１",
+                lcdDisplay: "P入力:火災移報入力",
+                lcdDisplayChinese: "P輸入:火災移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ﾏｽﾀ-ﾊﾞﾝ",
+                terminalEnglish: "M-panel",
+                eventName: "ｶｻｲｲﾎｳ5",
+                eventNameEnglish: "FA Interlock #5",
+                eventType: "ｼﾞｭｼﾝ",
+                eventTypeEnglish: "rec.",
+                recoveryName: "ｶｻｲｲﾎｳ5",
+                recoveryNameEnglish: "FA Interlock #5",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "reset"
+            },
+            {
+                no: 141,
+                event: "Ｐ入力:火災移報入力＃１",
+                eventChinese: "Ｐ輸入:火災移報輸入＃１",
+                lcdDisplay: "P入力:火災移報入力",
+                lcdDisplayChinese: "P輸入:火災移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ﾏｽﾀ-ﾊﾞﾝ",
+                terminalEnglish: "M-panel",
+                eventName: "ｶｻｲｲﾎｳ6",
+                eventNameEnglish: "FA Interlock #6",
+                eventType: "ｼﾞｭｼﾝ",
+                eventTypeEnglish: "rec.",
+                recoveryName: "ｶｻｲｲﾎｳ6",
+                recoveryNameEnglish: "FA Interlock #6",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "reset"
+            },
+            {
+                no: 142,
+                event: "Ｐ入力:火災移報入力＃１",
+                eventChinese: "Ｐ輸入:火災移報輸入＃１",
+                lcdDisplay: "P入力:火災移報入力",
+                lcdDisplayChinese: "P輸入:火災移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ﾏｽﾀ-ﾊﾞﾝ",
+                terminalEnglish: "M-panel",
+                eventName: "ｶｻｲｲﾎｳ7",
+                eventNameEnglish: "FA Interlock #7",
+                eventType: "ｼﾞｭｼﾝ",
+                eventTypeEnglish: "rec.",
+                recoveryName: "ｶｻｲｲﾎｳ7",
+                recoveryNameEnglish: "FA Interlock #7",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "reset"
+            },
+            {
+                no: 143,
+                event: "Ｐ入力:火災移報入力＃１",
+                eventChinese: "Ｐ輸入:火災移報輸入＃１",
+                lcdDisplay: "P入力:火災移報入力",
+                lcdDisplayChinese: "P輸入:火災移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ﾏｽﾀ-ﾊﾞﾝ",
+                terminalEnglish: "M-panel",
+                eventName: "ｶｻｲｲﾎｳ8",
+                eventNameEnglish: "FA Interlock #8",
+                eventType: "ｼﾞｭｼﾝ",
+                eventTypeEnglish: "rec.",
+                recoveryName: "ｶｻｲｲﾎｳ8",
+                recoveryNameEnglish: "FA Interlock #8",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "reset"
+            },
+            {
+                no: 144,
+                event: "Ｐ入力:他制御盤放水中移報入力",
+                eventChinese: "Ｐ輸入:他控制盤放水中移報輸入",
+                lcdDisplay: "P入力:他制御盤放水中移報入力",
+                lcdDisplayChinese: "P輸入:他控制盤放水中移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ﾀｼｽﾃﾑﾎｳｽｲﾁｭｳ",
+                eventNameEnglish: "ano-panel on starting",
+                eventType: "ｼﾞｭｼﾝ",
+                eventTypeEnglish: "rec.",
+                recoveryName: "ﾀｼｽﾃﾑﾎｳｽｲﾁｭｳ",
+                recoveryNameEnglish: "ano-panel on starting",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "stop"
+            },
+            {
+                no: 145,
+                event: "Ｐ入力:ポンプ起動確認入力",
+                eventChinese: "Ｐ輸入:泵啟動確認輸入",
+                lcdDisplay: "P入力:ポンプ起動確認入力",
+                lcdDisplayChinese: "P輸入:泵啟動確認輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "ﾎﾟﾝﾌﾟ",
+                eventNameEnglish: "pump",
+                eventType: "ｷﾄﾞｳ",
+                eventTypeEnglish: "start",
+                recoveryName: "ﾎﾟﾝﾌﾟ",
+                recoveryNameEnglish: "pump",
+                recoveryType: "ﾃｲｼ",
+                recoveryTypeEnglish: "stop"
+            },
+            {
+                no: 146,
+                event: "Ｐ入力:汎用移報入力＃１",
+                eventChinese: "Ｐ輸入:通用移報輸入＃１",
+                lcdDisplay: "P入力:汎用移報入力",
+                lcdDisplayChinese: "P輸入:通用移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 147,
+                event: "Ｐ入力:汎用移報入力＃２",
+                eventChinese: "Ｐ輸入:通用移報輸入＃２",
+                lcdDisplay: "P入力:汎用移報入力",
+                lcdDisplayChinese: "P輸入:通用移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 148,
+                event: "Ｐ入力:汎用移報入力＃３",
+                eventChinese: "Ｐ輸入:通用移報輸入＃３",
+                lcdDisplay: "P入力:汎用移報入力",
+                lcdDisplayChinese: "P輸入:通用移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 149,
+                event: "Ｐ入力:汎用移報入力＃４",
+                eventChinese: "Ｐ輸入:通用移報輸入＃４",
+                lcdDisplay: "P入力:汎用移報入力",
+                lcdDisplayChinese: "P輸入:通用移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 150,
+                event: "Ｐ入力:汎用移報入力＃５",
+                eventChinese: "Ｐ輸入:通用移報輸入＃５",
+                lcdDisplay: "P入力:汎用移報入力",
+                lcdDisplayChinese: "P輸入:通用移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 151,
+                event: "Ｐ入力:汎用移報入力＃１",
+                eventChinese: "Ｐ輸入:通用移報輸入＃１",
+                lcdDisplay: "P入力:汎用移報入力",
+                lcdDisplayChinese: "P輸入:通用移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 152,
+                event: "Ｐ入力:汎用移報入力＃２",
+                eventChinese: "Ｐ輸入:通用移報輸入＃２",
+                lcdDisplay: "P入力:汎用移報入力",
+                lcdDisplayChinese: "P輸入:通用移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 153,
+                event: "Ｐ入力:汎用移報入力＃２",
+                eventChinese: "Ｐ輸入:通用移報輸入＃２",
+                lcdDisplay: "P入力:汎用移報入力",
+                lcdDisplayChinese: "P輸入:通用移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 154,
+                event: "Ｐ入力:汎用移報入力＃２",
+                eventChinese: "Ｐ輸入:通用移報輸入＃２",
+                lcdDisplay: "P入力:汎用移報入力",
+                lcdDisplayChinese: "P輸入:通用移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 155,
+                event: "Ｐ入力:汎用移報入力＃２",
+                eventChinese: "Ｐ輸入:通用移報輸入＃２",
+                lcdDisplay: "P入力:汎用移報入力",
+                lcdDisplayChinese: "P輸入:通用移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 156,
+                event: "Ｐ入力:汎用移報入力＃２",
+                eventChinese: "Ｐ輸入:通用移報輸入＃２",
+                lcdDisplay: "P入力:汎用移報入力",
+                lcdDisplayChinese: "P輸入:通用移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 157,
+                event: "Ｐ入力:汎用移報入力＃２",
+                eventChinese: "Ｐ輸入:通用移報輸入＃２",
+                lcdDisplay: "P入力:汎用移報入力",
+                lcdDisplayChinese: "P輸入:通用移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 158,
+                event: "Ｐ入力:汎用移報入力＃２",
+                eventChinese: "Ｐ輸入:通用移報輸入＃２",
+                lcdDisplay: "P入力:汎用移報入力",
+                lcdDisplayChinese: "P輸入:通用移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 159,
+                event: "Ｐ入力:汎用移報入力＃２",
+                eventChinese: "Ｐ輸入:通用移報輸入＃２",
+                lcdDisplay: "P入力:汎用移報入力",
+                lcdDisplayChinese: "P輸入:通用移報輸入",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 160,
+                event: "判断:バックアップ初期化要求",
+                eventChinese: "判斷:備份初始化要求",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 161,
+                event: "ＳＣＰＵ間通信障害",
+                eventChinese: "ＳＣＰＵ間通信故障",
+                lcdDisplay: "マスター盤障害",
+                lcdDisplayChinese: "主盤故障",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ｻﾌﾞCPU",
+                terminalEnglish: "SCPU",
+                eventName: "ﾃﾞﾝｿｳｼｮｳｶﾞｲ",
+                eventNameEnglish: "transmission fault",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾃﾞﾝｿｳｼｮｳｶﾞｲ",
+                recoveryNameEnglish: "transmission fault",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 162,
+                event: "Ｅ２ＰＲＯＭ読み込み／書き込み障害",
+                eventChinese: "Ｅ２ＰＲＯＭ讀取／寫入故障",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "E2PROM",
+                terminalEnglish: "E2PROM",
+                eventName: "R/Wｴﾗｰ",
+                eventNameEnglish: "R/W error",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 163,
+                event: "Ｅ２ＰＲＯＭバックアップ障害",
+                eventChinese: "Ｅ２ＰＲＯＭ備份故障",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "E2PROM",
+                terminalEnglish: "E2PROM",
+                eventName: "ﾊﾞｯｸｱｯﾌﾟｴﾗｰ",
+                eventNameEnglish: "backup error",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 164,
+                event: "ＳＲＡＭバックアップ障害",
+                eventChinese: "ＳＲＡＭ備份故障",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "SRAM",
+                terminalEnglish: "SRAM",
+                eventName: "ﾊﾞｯｸｱｯﾌﾟｴﾗｰ",
+                eventNameEnglish: "backup error",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 165,
+                event: "ＲＴＣバックアップ障害",
+                eventChinese: "ＲＴＣ備份故障",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "RTC",
+                terminalEnglish: "RTC",
+                eventName: "ﾊﾞｯｸｱｯﾌﾟｴﾗｰ",
+                eventNameEnglish: "backup error",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 166,
+                event: "予備電源電圧低下",
+                eventChinese: "備用電源電壓低下",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ﾊﾞｯﾃﾘ",
+                terminalEnglish: "battery",
+                eventName: "ﾃﾞﾝｱﾂﾃｲｶ",
+                eventNameEnglish: "low voltage",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾃﾞﾝｱﾂﾃｲｶ",
+                recoveryNameEnglish: "low voltage",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 167,
+                event: "予備電源未接続",
+                eventChinese: "備用電源未連接",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ﾊﾞｯﾃﾘ",
+                terminalEnglish: "battery",
+                eventName: "ﾐｾﾂｿﾞｸ",
+                eventNameEnglish: "unconnected",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ﾐｾﾂｿﾞｸ",
+                recoveryNameEnglish: "unconnected",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 168,
+                event: "障害属性の汎用移報入力(代表)",
+                eventChinese: "故障屬性的通用移報輸入(代表)",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 169,
+                event: "ＡＣ電源断",
+                eventChinese: "ＡＣ電源斷",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "ﾏｽﾀ-ﾊﾞﾝ",
+                terminalEnglish: "M-panel",
+                eventName: "ACﾃﾞﾝｹﾞﾝﾀﾞﾝ",
+                eventNameEnglish: "AC power down",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "ACﾃﾞﾝｹﾞﾝﾀﾞﾝ",
+                recoveryNameEnglish: "AC power down",
+                recoveryType: "ﾌｯｷｭｳ",
+                recoveryTypeEnglish: "cleared"
+            },
+            {
+                no: 170,
+                event: "障害属性の汎用移報入力による障害(個別)",
+                eventChinese: "故障屬性的通用移報輸入導致的故障(個別)",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 171,
+                event: "障害属性の汎用移報入力による障害(個別)",
+                eventChinese: "故障屬性的通用移報輸入導致的故障(個別)",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 172,
+                event: "障害属性の汎用移報入力による障害(個別)",
+                eventChinese: "故障屬性的通用移報輸入導致的故障(個別)",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 173,
+                event: "障害属性の汎用移報入力による障害(個別)",
+                eventChinese: "故障屬性的通用移報輸入導致的故障(個別)",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 174,
+                event: "障害属性の汎用移報入力による障害(個別)",
+                eventChinese: "故障屬性的通用移報輸入導致的故障(個別)",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 175,
+                event: "障害属性の汎用移報入力による障害(個別)",
+                eventChinese: "故障屬性的通用移報輸入導致的故障(個別)",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 176,
+                event: "障害属性の汎用移報入力による障害(個別)",
+                eventChinese: "故障屬性的通用移報輸入導致的故障(個別)",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 177,
+                event: "障害属性の汎用移報入力による障害(個別)",
+                eventChinese: "故障屬性的通用移報輸入導致的故障(個別)",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 178,
+                event: "障害属性の汎用移報入力による障害(個別)",
+                eventChinese: "故障屬性的通用移報輸入導致的故障(個別)",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 179,
+                event: "障害属性の汎用移報入力による障害(個別)",
+                eventChinese: "故障屬性的通用移報輸入導致的故障(個別)",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 180,
+                event: "障害属性の汎用移報入力による障害(個別)",
+                eventChinese: "故障屬性的通用移報輸入導致的故障(個別)",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 181,
+                event: "障害属性の汎用移報入力による障害(個別)",
+                eventChinese: "故障屬性的通用移報輸入導致的故障(個別)",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 182,
+                event: "ユニット制御盤ｎ 障害代表",
+                eventChinese: "單元控制盤ｎ 故障代表",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            },
+            {
+                no: 183,
+                event: "ユニット制御盤ｎ特定範囲火災エリア移報１",
+                eventChinese: "單元控制盤ｎ特定範圍火災區域移報１",
+                lcdDisplay: "",
+                lcdDisplayChinese: "",
+                panel: "",
+                panelEnglish: "",
+                terminal: "",
+                terminalEnglish: "",
+                eventName: "",
+                eventNameEnglish: "",
+                eventType: "",
+                eventTypeEnglish: "",
+                recoveryName: "",
+                recoveryNameEnglish: "",
+                recoveryType: "",
+                recoveryTypeEnglish: ""
+            }
+        ];
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            renderTable(lcdMessages, true, true);
+            setupFilters();
+            updateCounts();
+            setupLanguageToggles();
+        });
+
+        // テーブルをレンダリングする関数
+        function renderTable(data, showChinese = true, showEnglish = true) {
+            const tableBody = document.getElementById('table-body');
+            tableBody.innerHTML = '';
+            
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                
+                let eventContent = item.event;
+                let lcdContent = item.lcdDisplay;
+                let panelContent = item.panel;
+                let terminalContent = item.terminal;
+                let eventNameContent = item.eventName;
+                let eventTypeContent = item.eventType;
+                let recoveryNameContent = item.recoveryName;
+                let recoveryTypeContent = item.recoveryType;
+                
+                // 添加中文翻譯
+                if (showChinese && item.eventChinese) {
+                    eventContent = `${item.event}<span class="chinese-translation">${item.eventChinese}</span>`;
+                }
+                
+                if (showChinese && item.lcdDisplayChinese) {
+                    lcdContent = `${item.lcdDisplay}<span class="chinese-translation">${item.lcdDisplayChinese}</span>`;
+                }
+                
+                // 添加英文翻譯
+                if (showEnglish) {
+                    if (item.panelEnglish) {
+                        panelContent = `${item.panel}<span class="english-translation">${item.panelEnglish}</span>`;
+                    }
+                    
+                    if (item.terminalEnglish) {
+                        terminalContent = `${item.terminal}<span class="english-translation">${item.terminalEnglish}</span>`;
+                    }
+                    
+                    if (item.eventNameEnglish) {
+                        eventNameContent = `${item.eventName}<span class="english-translation">${item.eventNameEnglish}</span>`;
+                    }
+                    
+                    if (item.eventTypeEnglish) {
+                        eventTypeContent = `${item.eventType}<span class="english-translation">${item.eventTypeEnglish}</span>`;
+                    }
+                    
+                    if (item.recoveryNameEnglish) {
+                        recoveryNameContent = `${item.recoveryName}<span class="english-translation">${item.recoveryNameEnglish}</span>`;
+                    }
+                    
+                    if (item.recoveryTypeEnglish) {
+                        recoveryTypeContent = `${item.recoveryType}<span class="english-translation">${item.recoveryTypeEnglish}</span>`;
+                    }
+                }
+                
+                row.innerHTML = `
+                    <td class="no-col">${item.no}</td>
+                    <td class="event-col">${eventContent}</td>
+                    <td class="lcd-col">${lcdContent}</td>
+                    <td class="panel-col">${panelContent}</td>
+                    <td class="terminal-col">${terminalContent}</td>
+                    <td>${eventNameContent}</td>
+                    <td>${eventTypeContent}</td>
+                    <td>${recoveryNameContent}</td>
+                    <td>${recoveryTypeContent}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            updateDisplayCount(data.length);
+        }
+
+        // フィルターの設定
+        function setupFilters() {
+            const searchInput = document.getElementById('search');
+            const categoryFilter = document.getElementById('category-filter');
+            const resetButton = document.getElementById('reset-filters');
+            
+            searchInput.addEventListener('input', applyFilters);
+            categoryFilter.addEventListener('change', applyFilters);
+            resetButton.addEventListener('click', resetFilters);
+        }
+
+        // 語言切換設定
+        function setupLanguageToggles() {
+            const chineseToggle = document.getElementById('show-chinese');
+            const englishToggle = document.getElementById('show-english');
+            
+            chineseToggle.addEventListener('change', function() {
+                applyFilters();
+            });
+            
+            englishToggle.addEventListener('change', function() {
+                applyFilters();
+            });
+        }
+
+        // フィルターを適用
+        function applyFilters() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const category = document.getElementById('category-filter').value;
+            const showChinese = document.getElementById('show-chinese').checked;
+            const showEnglish = document.getElementById('show-english').checked;
+            
+            let filteredData = lcdMessages;
+            
+            // 検索語でフィルター
+            if (searchTerm) {
+                filteredData = filteredData.filter(item => 
+                    item.event.toLowerCase().includes(searchTerm) ||
+                    item.eventChinese.toLowerCase().includes(searchTerm) ||
+                    item.lcdDisplay.toLowerCase().includes(searchTerm) ||
+                    item.lcdDisplayChinese.toLowerCase().includes(searchTerm) ||
+                    item.terminal.toLowerCase().includes(searchTerm) ||
+                    item.terminalEnglish.toLowerCase().includes(searchTerm) ||
+                    item.eventName.toLowerCase().includes(searchTerm) ||
+                    item.eventNameEnglish.toLowerCase().includes(searchTerm) ||
+                    item.recoveryName.toLowerCase().includes(searchTerm) ||
+                    item.recoveryNameEnglish.toLowerCase().includes(searchTerm) ||
+                    item.panelEnglish.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // カテゴリでフィルター
+            if (category !== 'all') {
+                filteredData = filteredData.filter(item => 
+                    item.event.startsWith(category)
+                );
+            }
+            
+            renderTable(filteredData, showChinese, showEnglish);
+        }
+
+        // フィルターをリセット
+        function resetFilters() {
+            document.getElementById('search').value = '';
+            document.getElementById('category-filter').value = 'all';
+            document.getElementById('show-chinese').checked = true;
+            document.getElementById('show-english').checked = true;
+            renderTable(lcdMessages, true, true);
+        }
+
+        // カウントを更新
+        function updateCounts() {
+            document.getElementById('total-count').textContent = lcdMessages.length;
+            document.getElementById('total-items').textContent = lcdMessages.length;
+        }
+
+        // 表示中のアイテム数を更新
+        function updateDisplayCount(count) {
+            document.getElementById('display-count').textContent = count;
+        }
+    </script>
+</body>
+</html>
