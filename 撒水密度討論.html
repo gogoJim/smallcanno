@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>小規模撒水 - 動態水量計算說明 </title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none; /* 避免干擾選取，但不影響文字複製 */
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Noto Sans TC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(145deg, #e0f0e8 0%, #c8e0d4 100%);
+            margin: 0;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 主卡片 */
+        .container {
+            max-width: 1350px;
+            width: 100%;
+            background: rgba(255,255,240,0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 56px;
+            box-shadow: 0 25px 45px rgba(0, 20, 0, 0.3), inset 0 1px 2px rgba(255,255,200,0.8);
+            overflow: hidden;
+            padding: 1.8rem 2rem 2.2rem;
+            transition: all 0.2s;
+        }
+
+        h1 {
+            font-size: 1.9rem;
+            margin: 0 0 0.3rem 0;
+            color: #1e3c2c;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            border-bottom: 3px solid #5b8c6f;
+            padding-bottom: 12px;
+        }
+
+        h1 small {
+            font-size: 0.9rem;
+            font-weight: normal;
+            background: #2b5e3b;
+            color: #f9f3cf;
+            padding: 6px 14px;
+            border-radius: 60px;
+            letter-spacing: 1px;
+        }
+
+        .sub {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            margin-bottom: 28px;
+            color: #2d4a36;
+            font-weight: 500;
+        }
+
+        .water-badge {
+            background: #1f5437;
+            color: #ffefb9;
+            padding: 8px 18px;
+            border-radius: 48px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            box-shadow: inset 0 -1px 0 #3b7853, 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .water-badge span {
+            font-size: 1.7rem;
+            letter-spacing: 2px;
+        }
+
+        /* 表格區域 + 動態卡片 */
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .table-wrapper {
+            flex: 2;
+            min-width: 280px;
+            background: #fefef7;
+            border-radius: 36px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            overflow-x: auto;
+            padding: 8px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            min-width: 580px;
+        }
+
+        th {
+            background: #2c5a3e;
+            color: white;
+            padding: 14px 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: center;
+            border-right: 1px solid #487a5c;
+        }
+        th:last-child { border-right: none; }
+
+        td {
+            border: 1px solid #d0dfcf;
+            text-align: center;
+            padding: 12px 5px;
+            background-color: #ffffff;
+            transition: 0.1s;
+        }
+
+        tr:hover td {
+            background-color: #fcf9e1;
+        }
+
+        .mode-highlight {
+            background: #eaf7ea;
+            font-weight: 600;
+            color: #1a4d2a;
+        }
+
+        .param-name {
+            background: #eef2e6;
+            font-weight: 600;
+            color: #2a573b;
+        }
+
+        /* 互動控制卡 */
+        .control-card {
+            flex: 1.2;
+            min-width: 280px;
+            background: #f5f9f0;
+            border-radius: 40px;
+            padding: 18px 22px;
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(4px);
+            border: 1px solid #d6e6cf;
+        }
+
+        .control-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1b4d2e;
+            border-left: 6px solid #5baa7a;
+            padding-left: 16px;
+        }
+
+        .slider-group {
+            margin-bottom: 25px;
+        }
+
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            color: #2a523b;
+            margin-bottom: 8px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #cbdcc2;
+            border-radius: 10px;
+            outline: none;
+        }
+
+        input[type="range"]:focus {
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #2a7f49;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border: 2px solid #f5f5dc;
+        }
+
+        .mode-select {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+            background: #e2ecda;
+            padding: 8px 12px;
+            border-radius: 60px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #ffffffb3;
+            transition: 0.2s;
+            border: 1px solid #b7cfaa;
+            color: #2f5a40;
+        }
+
+        .mode-btn.active {
+            background: #2c7a47;
+            color: white;
+            border-color: #1c5a36;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .result-area {
+            background: #e2efdb;
+            border-radius: 32px;
+            padding: 18px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .result-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #154e29;
+            line-height: 1.2;
+        }
+
+        .result-label {
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            color: #3c6e4a;
+        }
+
+        .highlight-bar {
+            margin-top: 15px;
+            background: #cbdcc2;
+            border-radius: 30px;
+            height: 12px;
+            overflow: hidden;
+        }
+        .fill-bar {
+            width: 0%;
+            height: 100%;
+            background: #2f9e5a;
+            border-radius: 30px;
+            transition: width 0.3s ease;
+        }
+
+        .footnote {
+            font-size: 0.75rem;
+            color: #5b6e55;
+            text-align: center;
+            margin-top: 25px;
+            border-top: 1px solid #cbd5bf;
+            padding-top: 16px;
+        }
+
+        @media (max-width: 780px) {
+            .container { padding: 1.2rem; }
+            h1 { font-size: 1.4rem; }
+            .result-number { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>
+        🌊 小規模撒水系統
+        <small>動態水量模擬 · 每分鐘固定 500 公升</small>
+    </h1>
+    <div class="sub">
+        <span>✔ 依據安裝高度與射程模式 · 即時計算有效覆蓋 & 實際灑水密度</span>
+        <div class="water-badge">💧 總供水量 <span>500</span> L/min</div>
+    </div>
+
+    <div class="dashboard">
+        <!-- 規格表: 原始數據對照 -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th rowspan="2">安裝高度</th>
+                    <th colspan="4">近射程模式 (近距離)</th>
+                    <th colspan="4">遠射程模式 (遠距離)</th>
+                </tr>
+                <tr>
+                    <th>放水最遠距離</th>                   
+				   <th>放射距離範圍</th>
+                    <th>有效範圍(m²)</th>
+                    <th>標準密度(Lpm/m²)</th>
+                    <th>放射距離範圍</th>
+
+                    <th>有效範圍(m²)</th>
+                    <th>標準密度(Lpm/m²)</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td class="param-name">4 - 6 m</td>
+                    <td>36m</td>					
+                    <td>-0.5 ~ 23m</td>
+                    <td>47</td>
+                    <td>10.6</td>
+                    <td>22 ~ 36m</td>
+
+                    <td>28</td>
+                    <td>17.9</td>
+                </tr>
+                <tr>
+                    <td class="param-name">6 - 8 m</td>
+                    <td>38m</td>					
+                    <td>-0.5 ~ 24m</td>
+                    <td>49</td>
+                    <td>10.2</td>
+                    <td>23 ~ 38m</td>
+
+                    <td>30</td>
+                    <td>16.7</td>
+                </tr>
+                <tr>
+                    <td class="param-name">8 - 15 m</td>
+                    <td>40m</td>
+                    <td>-0.5 ~ 25m</td>
+                    <td>51</td>
+                    <td>9.8</td>
+                    <td>24 ~ 40m</td>
+
+                    <td>32</td>
+                    <td>15.6</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 動態操作面板 -->
+        <div class="control-card">
+            <div class="control-title">⚙️ 即時參數調整</div>
+            <div class="slider-group">
+                <label>📏 安裝高度 <span id="heightValueDisplay">6.0 m</span></label>
+                <input type="range" id="heightSlider" min="4" max="15" step="0.1" value="7.2">
+                <div style="display: flex; justify-content: space-between; font-size:0.7rem; color:#4e6b44;">
+                    <span>4m</span><span>8m</span><span>12m</span><span>15m</span>
+                </div>
+            </div>
+
+            <div class="mode-select" id="modeSelector">
+                <div class="mode-btn" data-mode="near">🌿 近射程模式 (近距離覆蓋)</div>
+                <div class="mode-btn" data-mode="far">🚀 遠射程模式 (大範圍遠距)</div>
+            </div>
+
+            <div class="result-area">
+                <div>💧 依據 <strong id="activeModeText">近射程模式</strong> · 每分鐘500L水量</div>
+                <div class="result-number" id="densityValue">-- Lpm/m²</div>
+                <div class="result-label">實際灑水密度 (強度)</div>
+                <div class="highlight-bar">
+                    <div class="fill-bar" id="densityBar" style="width:0%"></div>
+                </div>
+                <div style="margin-top: 12px; display: flex; justify-content: space-between;">
+                    <div><span class="result-label">📐 有效範圍</span><br><span id="areaValue" style="font-weight:800;">--</span> m²</div>
+                    <div><span class="result-label">⚡ 總流量</span><br><span style="font-weight:800;">500</span> L/min</div>
+                </div>
+                <div style="margin-top: 8px; font-size:0.8rem; background:#d0e2c4; border-radius: 20px; padding: 5px;">
+                    💡 灑水密度 = 總水量(500 L/min) / 有效範圍 (m²)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footnote">
+        ※ 本模擬依據給定技術參數表：安裝高度區間對應不同射程模式之有效範圍(m²) ，並以固定流量500 L/min 動態計算實際覆蓋強度。<br>
+        ※ 近射程模式有效範圍較大但標準密度較低；遠射程模式有效範圍較小但集中度高，水量恆定下密度隨範圍改變。
+    </div>
+</div>
+
+<script>
+    // ----- 原始數據對照表 (依照安裝高度區間)
+    // 區間定義: 4-6 , 6-8 , 8-15
+    // 近射程模式: 有效範圍面積, 遠射程模式: 有效範圍面積
+    const dataSet = [
+        { heightRange: [4, 6],   nearArea: 47, farArea: 28 },   // 近:47, 遠:28
+        { heightRange: [6, 8],   nearArea: 49, farArea: 30 },   // 近:49, 遠:30
+        { heightRange: [8, 15],  nearArea: 51, farArea: 32 }    // 近:51, 遠:32
+    ];
+
+    // 對應區間額外提供備註 (標準密度表只是參考，實際動態計算用面積)
+    // 但為了讓使用者看到一致， 表格內標準密度(Lpm/m2)為廠商預設密度（基於某水量？）
+    // 本系統核心為總水量500L/min，所以實際密度會與表格不同，我們特別備註動態說明。
+    
+    // 獲取DOM元素
+    const heightSlider = document.getElementById('heightSlider');
+    const heightValueDisplay = document.getElementById('heightValueDisplay');
+    const densityValueSpan = document.getElementById('densityValue');
+    const areaValueSpan = document.getElementById('areaValue');
+    const densityBar = document.getElementById('densityBar');
+    const activeModeTextSpan = document.getElementById('activeModeText');
+    
+    let currentMode = "near";   // "near" 或 "far"
+    
+    // 根據高度數值(m) 回傳對應的資料物件 { nearArea, farArea }
+    function getAreaByHeight(height) {
+        for (let i = 0; i < dataSet.length; i++) {
+            const range = dataSet[i].heightRange;
+            if (height >= range[0] && height <= range[1]) {
+                return {
+                    nearArea: dataSet[i].nearArea,
+                    farArea: dataSet[i].farArea
+                };
+            }
+        }
+        // 邊界情況: 如果高度小於4 用第一組, 大於15 用最後一組
+        if (height < 4) return { nearArea: 47, farArea: 28 };
+        if (height > 15) return { nearArea: 51, farArea: 32 };
+        return { nearArea: 51, farArea: 32 };
+    }
+    
+    // 計算並更新所有UI: 密度、面積、進度條
+    function updateCalculation() {
+        const height = parseFloat(heightSlider.value);
+        heightValueDisplay.innerText = height.toFixed(1) + " m";
+        
+        // 取得對應面積
+        const areas = getAreaByHeight(height);
+        let currentArea = 0;
+        if (currentMode === "near") {
+            currentArea = areas.nearArea;
+            activeModeTextSpan.innerText = "近射程模式 (近距離)";
+        } else {
+            currentArea = areas.farArea;
+            activeModeTextSpan.innerText = "遠射程模式 (遠距離)";
+        }
+        
+        const totalFlow = 500; // L/min 固定
+        let density = totalFlow / currentArea;  // Lpm/m2
+        density = Math.round(density * 10) / 10; // 小數一位
+        
+        // 更新顯示面積與密度
+        areaValueSpan.innerText = currentArea;
+        densityValueSpan.innerHTML = density + " Lpm/m²";
+        
+        // 密度可視化進度條: 因為一般灑水密度區間大約在5~25之間，遠射程最高理論值 500/28 ≈ 17.86，近射程最低約 500/51≈9.8
+        // 設計最大對應密度20 Lpm/m² 為100%寬度, 高於20也滿條即可。
+        let percent = (density / 20) * 100;
+        if (percent > 100) percent = 100;
+        densityBar.style.width = percent + "%";
+        
+        // 增加輔助說明: 若密度低於閾值則變色動態微調
+        if (density < 10) {
+            densityBar.style.backgroundColor = "#62b37a";
+        } else {
+            densityBar.style.backgroundColor = "#2f9e5a";
+        }
+    }
+    
+    // 切換模式 (近/遠)
+    function setMode(mode) {
+        currentMode = mode;
+        // 更新按鈕樣式
+        const nearBtn = document.querySelector('.mode-btn[data-mode="near"]');
+        const farBtn = document.querySelector('.mode-btn[data-mode="far"]');
+        if (mode === "near") {
+            nearBtn.classList.add('active');
+            farBtn.classList.remove('active');
+        } else {
+            farBtn.classList.add('active');
+            nearBtn.classList.remove('active');
+        }
+        updateCalculation();
+    }
+    
+    // 事件綁定
+    function bindEvents() {
+        heightSlider.addEventListener('input', () => {
+            updateCalculation();
+        });
+        
+        const nearBtn = document.querySelector('.mode-btn[data-mode="near"]');
+        const farBtn = document.querySelector('.mode-btn[data-mode="far"]');
+        nearBtn.addEventListener('click', () => setMode("near"));
+        farBtn.addEventListener('click', () => setMode("far"));
+    }
+    
+    // 加上安裝高度區間提示即時顯示對應的表格來源資訊（動態附註）
+    function addDynamicHighlight() {
+        // 額外功能: 根據當前高度，在表格中對應區間的高亮效果 (提升直覺)
+        const rows = document.querySelectorAll('table tbody tr');
+        function highlightTableRow() {
+            const height = parseFloat(heightSlider.value);
+            let activeIndex = -1;
+            if (height >= 4 && height <= 6) activeIndex = 0;
+            else if (height > 6 && height <= 8) activeIndex = 1;
+            else if (height > 8 && height <= 15) activeIndex = 2;
+            else if (height < 4) activeIndex = 0;
+            else if (height > 15) activeIndex = 2;
+            
+            rows.forEach((row, idx) => {
+                row.style.transition = "background 0.2s";
+                if (idx === activeIndex) {
+                    row.style.backgroundColor = "#d9efce";
+                    row.style.borderLeft = "4px solid #2d7842";
+                } else {
+                    row.style.backgroundColor = "";
+                    row.style.borderLeft = "";
+                }
+            });
+        }
+        heightSlider.addEventListener('input', highlightTableRow);
+        highlightTableRow();
+    }
+    
+    // 初始化時顯示近射程模式，且高度設為7.2 落在6-8區間，帶出對應面積49 (近) 或30 (遠)
+    function init() {
+        // 設定預設高度 7.2 (落在6-8區間美觀)
+        heightSlider.value = "7.2";
+        // 預設近射程模式
+        currentMode = "near";
+        // 啟動按鈕樣式
+        const nearDef = document.querySelector('.mode-btn[data-mode="near"]');
+        const farDef = document.querySelector('.mode-btn[data-mode="far"]');
+        nearDef.classList.add('active');
+        farDef.classList.remove('active');
+        activeModeTextSpan.innerText = "近射程模式 (近距離)";
+        updateCalculation();
+        bindEvents();
+        addDynamicHighlight();
+        
+        // 顯示補充說明: 表格內的標準密度為特定水量下的參考值，本系統統一500L/min動態產生真實強度。
+        // 加上tooltip或浮水印
+        const tableHeaders = document.querySelectorAll('th');
+        // 增加動態提示
+        const noteDiv = document.createElement('div');
+        noteDiv.style.fontSize = "0.7rem";
+        noteDiv.style.marginTop = "8px";
+        noteDiv.style.textAlign = "center";
+        noteDiv.style.color = "#557a47";
+        noteDiv.innerHTML = "📌 表格中「標準密度」為原廠參考數值；右側動態計算以每分鐘500公升水量÷有效範圍，得出實際灑水密度。";
+        document.querySelector('.table-wrapper').appendChild(noteDiv);
+    }
+    
+    // 另外為了更清楚表達放射距離以及遠射程模式的最大距離，結合控制卡片可以顯示放射距離區間資訊
+    // 增強細節: 顯示當前模式下的射程範圍描述 (從表格擷取) 
+    function enhanceRangeDescription() {
+        const rangeInfoSpan = document.createElement('div');
+        rangeInfoSpan.style.marginTop = "10px";
+        rangeInfoSpan.style.fontSize = "0.8rem";
+        rangeInfoSpan.style.background = "#eef3e6";
+        rangeInfoSpan.style.padding = "8px 10px";
+        rangeInfoSpan.style.borderRadius = "24px";
+        rangeInfoSpan.style.textAlign = "center";
+        const controlCard = document.querySelector('.control-card');
+        const resultAreaDiv = document.querySelector('.result-area');
+        controlCard.insertBefore(rangeInfoSpan, resultAreaDiv.nextSibling);
+        
+        function updateRangeDesc() {
+            const height = parseFloat(heightSlider.value);
+            let rangeText = "";
+            let heightCategory = "";
+            if (height >= 4 && height <= 6) heightCategory = "4-6m";
+            else if (height > 6 && height <= 8) heightCategory = "6-8m";
+            else if (height > 8 && height <= 15) heightCategory = "8-15m";
+            else if (height < 4) heightCategory = "4-6m (下限)";
+            else heightCategory = "8-15m (上限)";
+            
+            // 根據模式從表格提取射程描述 (從html表格內容動態擷取更直覺)
+            const rows = document.querySelectorAll('table tbody tr');
+            let rowIndex = -1;
+            if (height >= 4 && height <= 6) rowIndex = 0;
+            else if (height > 6 && height <= 8) rowIndex = 1;
+            else if (height > 8 && height <= 15) rowIndex = 2;
+            else if (height < 4) rowIndex = 0;
+            else rowIndex = 2;
+            
+            if (rowIndex !== -1 && rows[rowIndex]) {
+                const row = rows[rowIndex];
+                const cells = row.querySelectorAll('td');
+                if (currentMode === "near") {
+                    // 近射程模式: 放射距離範圍 在第1個td(索引1) 內容像是 "-0.5~23m"
+                    const nearRange = cells[1] ? cells[1].innerText : "0~25m";
+                    rangeText = `🌾 近射程放射距離：${nearRange}  · 覆蓋範圍 ${getAreaByHeight(height).nearArea} m²`;
+                } else {
+                    // 遠射程模式: 放射距離範圍在第4個td(索引4) 遠距範圍顯示 "22~36m" 等
+                    const farRange = cells[4] ? cells[4].innerText : "22~40m";
+                    const maxDistCell = cells[5] ? cells[5].innerText : "";
+                    rangeText = `🚀 遠射程放射距離：${farRange} (最遠 ${maxDistCell}) · 覆蓋範圍 ${getAreaByHeight(height).farArea} m²`;
+                }
+            } else {
+                rangeText = currentMode === "near" ? "近射程模式覆蓋範圍大" : "遠射程集中高強度";
+            }
+            rangeInfoSpan.innerHTML = `📍 安裝高度 ${height.toFixed(1)}m (${heightCategory}) · ${rangeText}`;
+        }
+        
+        heightSlider.addEventListener('input', updateRangeDesc);
+        const origUpdate = updateCalculation;
+        window.updateCalculation = updateCalculation;
+        // 監聽模式切換更新描述
+        const observerMode = () => updateRangeDesc();
+        document.querySelector('.mode-btn[data-mode="near"]').addEventListener('click', observerMode);
+        document.querySelector('.mode-btn[data-mode="far"]').addEventListener('click', observerMode);
+        updateRangeDesc();
+    }
+    
+    // 啟動所有擴充
+    init();
+    enhanceRangeDescription();
+    // 確保密度和面積每次更新後也更新放射描述 (已包含在event)
+</script>
+
+	    <!-- 返回按鈕應該在這裡 -->
+    <button onclick="window.location.href='index.html'" 
+            style="position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; background: #4a6fa5; color: white; border: none; border-radius: 5px; cursor: pointer; z-index: 9999;">
+        返回主選單
+    </button>	
+
+
+
+</body>
+</html>
