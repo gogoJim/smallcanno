@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>走查探測器內部鏡片 | 可調轉速</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Microsoft JhengHei', 'Segoe UI', 'PingFang TC', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+        }
+        
+        /* 控制面板樣式 - 簡潔科技感 */
+        .controls {
+            position: absolute;
+            bottom: 25px;
+            left: 25px;
+            right: 25px;
+            background: rgba(30, 30, 45, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 28px;
+            padding: 15px 25px;
+            color: white;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            z-index: 10;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            pointer-events: auto;
+            font-weight: 500;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 18px;
+            border-radius: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .control-group label {
+            font-size: 1rem;
+            letter-spacing: 1px;
+        }
+        
+        .speed-value {
+            background: #000000aa;
+            padding: 4px 12px;
+            border-radius: 32px;
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #66ffaa;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        input[type="range"] {
+            width: 260px;
+            cursor: pointer;
+            background: #3a6ea5;
+            height: 4px;
+            border-radius: 5px;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]:focus {
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #66ffaa;
+            cursor: pointer;
+            box-shadow: 0 0 4px white;
+            border: none;
+        }
+        
+        .info-text {
+            background: rgba(0,0,0,0.6);
+            padding: 5px 15px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .badge {
+            background: #66ffaa;
+            color: #1e1e2e;
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 700px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+                bottom: 15px;
+                left: 15px;
+                right: 15px;
+                padding: 12px;
+            }
+            .control-group {
+                justify-content: space-between;
+            }
+            input[type="range"] {
+                width: 100%;
+            }
+            .info-text {
+                justify-content: center;
+            }
+        }
+        
+        /* 簡單的提示標註 */
+        .instruction {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            padding: 8px 16px;
+            border-radius: 32px;
+            color: #eee;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 10;
+            font-family: monospace;
+            border-left: 4px solid #66ffaa;
+        }
+        
+        .axis-note {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            background: rgba(0,0,0,0.5);
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            pointer-events: none;
+            color: #ccc;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="instruction">
+        📐 走查探測器內部鏡片 | 以<b>長邊中軸為軸心</b> 繞 <span style="color:#66ffaa; background:#00000066; padding:0 6px; border-radius:12px;">Z 軸</span> 360° 翻轉
+    </div>
+    <div class="axis-note">
+        ⚙️ 旋轉軸: 通過長邊中點且垂直於鏡片平面的軸線 (Z軸方向)
+    </div>
+    <div class="controls">
+		<div class="control-group">
+    <span>🌀 轉速控制</span>
+    <input type="range" id="rpmSlider" min="0" max="1000" step="1" value="600">
+    <span class="speed-value" id="rpmValue">600 RPM</span>
+    <span style="background: #000000aa; padding: 4px 12px; border-radius: 32px; font-family: monospace; font-size: 1.1rem; font-weight: bold; color: #ffaa66; min-width: 110px; text-align: center;" id="periodValue">0.100 秒/圈</span>
+		</div>
+        <div class="control-group">
+            <div class="info-text">
+                <span class="badge">💡 展示重點</span>
+                <span>鏡片連續翻轉 | 每分鐘0~1000轉 | 動態模擬旋轉</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入Three.js核心庫與擴展 -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        // --- 初始化場景、相機、渲染器 ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050b1a); // 深邃科技藍黑背景
+        scene.fog = new THREE.FogExp2(0x050b1a, 0.008); // 輕微霧效增強深度感
+
+        // 透視相機 (視角, 寬高比, 近平面, 遠平面) - 調整視角讓Z軸旋轉效果明顯
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(3, 2.5, 3.5);
+        camera.lookAt(0, 0, 0);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true; // 開啟陰影增強立體感
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+        
+        // CSS2渲染文字 (輔助說明軸線)
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        document.body.appendChild(labelRenderer.domElement);
+        
+        // --- 軌道控制，允許學生從不同角度觀察旋轉軸 ---
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;      // 慣性效果
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = false;
+        controls.enableZoom = true;
+        controls.enablePan = true;
+        controls.zoomSpeed = 1.2;
+        controls.rotateSpeed = 1.0;
+        controls.target.set(0, 0, 0);
+        
+        // --- 輔助元素: 網格地面與簡易軸線參考 ---
+        // 網格地板 (半透明，幫助定位空間)
+        const gridHelper = new THREE.GridHelper(8, 20, 0x88aaff, 0x335588);
+        gridHelper.position.y = -0.8;
+        gridHelper.material.transparent = true;
+        gridHelper.material.opacity = 0.35;
+        scene.add(gridHelper);
+        
+        // 簡易的世界軸輔助 (可選，增加教學感)
+        const axesHelper = new THREE.AxesHelper(2.0);
+        axesHelper.material.transparent = true;
+        axesHelper.material.opacity = 0.25;
+        scene.add(axesHelper);
+        
+        // 添加一個很淡的參考圓環，表示旋轉路徑意象 (繞Z軸，圓環應該在XY平面)
+        const ringGeometry = new THREE.TorusGeometry(1.3, 0.02, 64, 200);
+        const ringMaterial = new THREE.MeshStandardMaterial({ color: 0x66ffaa, emissive: 0x226633, transparent: true, opacity: 0.35 });
+        const referenceRing = new THREE.Mesh(ringGeometry, ringMaterial);
+        // 讓圓環面平行於XY平面，這樣繞Z軸的旋轉路徑可視化
+        referenceRing.rotation.x = Math.PI / 2;
+        referenceRing.position.z = 0;
+        scene.add(referenceRing);
+        
+        // 添加一條貫穿長邊中軸的虛線視覺效果: 沿Z軸方向繪製線段，代表軸心 (從 -1.5 到 1.5 在Z軸上)
+        const axisLinePoints = [];
+        axisLinePoints.push(new THREE.Vector3(0, 0, -1.6));
+        axisLinePoints.push(new THREE.Vector3(0, 0, 1.6));
+        const axisLineGeo = new THREE.BufferGeometry().setFromPoints(axisLinePoints);
+        const axisLineMat = new THREE.LineBasicMaterial({ color: 0xffaa66, linewidth: 2, transparent: true, opacity: 0.9 });
+        const centralAxisLine = new THREE.Line(axisLineGeo, axisLineMat);
+        scene.add(centralAxisLine);
+        
+        // 在軸的兩端添加小球標記，強調軸心位置 (Z軸正負端)
+        const sphereMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0x442200 });
+        const frontSphere = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 16), sphereMat);
+        frontSphere.position.set(0, 0, 1.6);
+        const backSphere = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 16), sphereMat);
+        backSphere.position.set(0, 0, -1.6);
+        scene.add(frontSphere);
+        scene.add(backSphere);
+        
+        // 添加額外的軸心輔助圓柱 (半透明，貫穿Z軸)
+        const axisCylinderGeo = new THREE.CylinderGeometry(0.04, 0.04, 3.2, 8);
+        const axisCylMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0x442200, transparent: true, opacity: 0.4 });
+        const axisVisual = new THREE.Mesh(axisCylinderGeo, axisCylMat);
+        // CylinderGeometry 預設軸向為Y，需要旋轉使其沿Z軸
+        axisVisual.rotation.x = Math.PI / 2;
+        axisVisual.position.set(0, 0, 0);
+        scene.add(axisVisual);
+        
+        // --- 建立主要的長方形鏡片 (使用BoxGeometry，強調長邊沿X軸，中軸為Z軸穿過中心) ---
+        // 鏡片尺寸: 長度 (X軸) 2.0，高度 (Y軸) 0.8，深度 (Z軸) 0.12。
+        // 為了讓長邊中軸為Z軸，我們定義長邊方向為 X軸方向，但旋轉軸為Z軸時，代表繞著垂直於鏡片平面的軸旋轉。
+        // 為了符合直覺: "長方形鏡片以長邊中間為軸心" 通常指沿著長邊方向的中線旋轉，類似翻頁。但根據修改要求"轉動方向是對Z軸"，
+        // 若Z軸為旋轉軸，則鏡片會像風車一樣在XY平面內旋轉。為了讓視覺符合"長邊中軸"且繞Z軸，我們可以設定鏡片的長邊沿X軸，
+        // 而旋轉軸Z通過中心，這樣旋轉時長邊依然繞自身中軸翻轉，但翻轉平面不同。為了讓教學更清晰，我們保持鏡片幾何並明確標示。
+        // 定義: 長邊為 X 軸方向 (長度2.0)，短邊為 Y 軸方向 (高度0.8)，厚度為 Z 軸方向 (0.12)。旋轉軸為Z軸，通過中心。
+        // 這樣繞Z軸旋轉時，鏡片會像螺旋槳般轉動，但仍以長邊中線為軸(幾何中心軸)。為了更貼近「鏡片翻轉」的視覺，我們可以讓鏡片薄片繞Z軸，
+        // 看起來像是繞長邊中軸做360度翻轉。
+        const lensWidth = 0.08;    // X軸: 長邊
+        const lensHeight = 2.0;   // Y軸: 寬度
+        const lensDepth = 0.5;   // Z軸: 厚度 (很薄，像鏡片)
+        
+        const geometry = new THREE.BoxGeometry(lensWidth, lensHeight, lensDepth);
+        // 主材質: 半透明藍色鏡面效果，模擬鏡片
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x3a9eff,
+            emissive: 0x001133,
+            metalness: 0.85,
+            roughness: 0.25,
+            transparent: true,
+            opacity: 0.8,
+            side: THREE.DoubleSide  // 讓翻轉時內側也看得見光澤
+        });
+        
+        const lens = new THREE.Mesh(geometry, material);
+        lens.castShadow = true;
+        lens.receiveShadow = false;
+        scene.add(lens);
+        
+        // 增加邊框線條，凸顯鏡片輪廓 (EdgesGeometry)
+        const edgesGeo = new THREE.EdgesGeometry(geometry);
+        const edgesMat = new THREE.LineBasicMaterial({ color: 0xffdd99, linewidth: 1 });
+        const wireframe = new THREE.LineSegments(edgesGeo, edgesMat);
+        lens.add(wireframe); // 邊框跟隨鏡片旋轉
+        
+        // 為了讓長邊中軸更直觀，在鏡片兩側長邊中點添加兩個小光點 (位於X軸正負端點)
+        const glowMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xff4411 });
+        const leftMarker = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), glowMat);
+        leftMarker.position.set(-lensWidth/2, 0, 0);
+        const rightMarker = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), glowMat);
+        rightMarker.position.set(lensWidth/2, 0, 0);
+        lens.add(leftMarker);
+        lens.add(rightMarker);
+        
+        // 另外在鏡片中心添加一個微弱的光暈點，表示軸心位置
+        const centerGlow = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 12), new THREE.MeshStandardMaterial({ color: 0x88ffaa, emissive: 0x228844 }));
+        lens.add(centerGlow);
+        
+        // --- 添加CSS2D文字標籤: 標示旋轉軸與說明 ---
+        function makeLabel(text, color, position) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            div.style.color = color;
+            div.style.fontSize = '15px';
+            div.style.fontWeight = 'bold';
+            div.style.textShadow = '1px 1px 0px black';
+            div.style.background = 'rgba(0,0,0,0.65)';
+            div.style.padding = '2px 10px';
+            div.style.borderRadius = '24px';
+            div.style.borderLeft = `3px solid ${color}`;
+            div.style.fontFamily = 'monospace';
+            div.style.backdropFilter = 'blur(4px)';
+            const label = new CSS2DObject(div);
+            label.position.copy(position);
+            scene.add(label);
+            return label;
+        }
+        
+        makeLabel('🔁 旋轉軸 (Z軸 / 長邊中軸)', '#66ffaa', new THREE.Vector3(0, 0.9, 1.7));
+        makeLabel('軸心貫穿鏡片中心 (Z軸方向)', '#88ffaa', new THREE.Vector3(0, -1.0, 1.6));
+        makeLabel('長邊 (X軸方向)', '#88aaff', new THREE.Vector3(1.4, 0.4, 0.4));
+        makeLabel('長邊', '#88aaff', new THREE.Vector3(-1.4, 0.4, 0.5));
+        makeLabel('鏡片繞Z軸翻轉', '#aaffdd', new THREE.Vector3(0.8, -0.6, 1.0));
+        makeLabel('軸端標記', '#ffaa66', new THREE.Vector3(0.3, 0.2, 1.85));
+        
+        // 增加環境光與點光源，讓鏡片材質漂亮
+        // 環境光
+        const ambientLight = new THREE.AmbientLight(0x404060);
+        scene.add(ambientLight);
+        // 主光源方向光
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        dirLight.position.set(2, 3, 2);
+        dirLight.castShadow = true;
+        dirLight.receiveShadow = false;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        scene.add(dirLight);
+        // 背光暖色補光
+        const backLight = new THREE.PointLight(0xffaa66, 0.5);
+        backLight.position.set(-1, 1, -2);
+        scene.add(backLight);
+        // 冷色側光
+        const fillLight = new THREE.PointLight(0x6688ff, 0.45);
+        fillLight.position.set(1.5, 0.8, 1.2);
+        scene.add(fillLight);
+        // 鏡片底部輕微補光
+        const rimLight = new THREE.PointLight(0x88aaff, 0.35);
+        rimLight.position.set(0, -1.2, 0.8);
+        scene.add(rimLight);
+        
+        // 增加星塵粒子背景效果 (簡單粒子系統，增加動態感)
+        const starGeometry = new THREE.BufferGeometry();
+        const starCount = 1000;
+        const starPositions = new Float32Array(starCount * 3);
+        for (let i = 0; i < starCount; i++) {
+            starPositions[i*3] = (Math.random() - 0.5) * 200;
+            starPositions[i*3+1] = (Math.random() - 0.5) * 100;
+            starPositions[i*3+2] = (Math.random() - 0.5) * 100 - 50;
+        }
+        starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        const starMaterial = new THREE.PointsMaterial({ color: 0xaaccff, size: 0.08, transparent: true, opacity: 0.6 });
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+        
+        // --- 動態旋轉控制 (繞 Z 軸) ---
+        let currentRPM = 600;   // 初始600轉
+        let lastTimestamp = performance.now();
+			
+		// 獲取DOM元素
+const rpmSlider = document.getElementById('rpmSlider');
+const rpmValueSpan = document.getElementById('rpmValue');
+const periodValueSpan = document.getElementById('periodValue');  // 👈 新增
+
+// 更新顯示（包含轉速與週期）
+function updateRPMDisplay(value) {
+    currentRPM = value;
+    rpmValueSpan.textContent = `${currentRPM} RPM`;
+    
+    // 計算轉動週期（秒/圈）
+    if (currentRPM === 0) {
+        periodValueSpan.textContent = `∞ 秒/圈 (靜止)`;
+    } else {
+        const period = 60 / currentRPM;
+        periodValueSpan.textContent = `${period.toFixed(3)} 秒/圈`;
+    }
+}
+
+        
+        rpmSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10);
+            updateRPMDisplay(val);
+        });
+        
+        // 初始設定
+        updateRPMDisplay(currentRPM);
+        
+        // 根據轉速改變參考環的顏色強度及軸端光暈，增加教學互動感
+        function updateRingIntensity(rpm) {
+            const intensity = Math.min(0.7, rpm / 1200);
+            if (referenceRing.material) {
+                referenceRing.material.emissiveIntensity = 0.1 + intensity * 0.4;
+                referenceRing.material.color.setHex(0x66ffaa);
+            }
+            // 軸線小球的閃爍 (前後端)
+            const glowIntensity = 0.3 + (rpm / 1000) * 0.8;
+            frontSphere.material.emissiveIntensity = glowIntensity * 0.6;
+            backSphere.material.emissiveIntensity = glowIntensity * 0.6;
+            // 鏡片中心光暈強度
+            if (centerGlow.material) {
+                centerGlow.material.emissiveIntensity = 0.2 + (rpm / 1000) * 0.5;
+            }
+        }
+        
+        // 為了讓旋轉更平順，使用時間差累積角度
+        function animate() {
+            const now = performance.now();
+            let deltaSec = Math.min(0.033, (now - lastTimestamp) / 1000);
+            if (deltaSec <= 0) {
+                deltaSec = 0.016;
+            }
+            lastTimestamp = now;
+            
+            // 根據當前 RPM 計算每秒轉數 => 每秒旋轉圈數 = RPM / 60
+            const revolutionsPerSec = currentRPM / 60;
+            // 每秒弧度 = revolutionsPerSec * 2 * PI
+            const radPerSec = revolutionsPerSec * 2 * Math.PI;
+            // 本幀應增加角度 (弧度)
+            const deltaAngle = radPerSec * deltaSec;
+            
+            // 重要修改: 繞 Z 軸旋轉 (因為要求轉動方向是對Z軸)
+            // 鏡片繞 Z 軸旋轉，實現360度翻轉效果
+            lens.rotateZ(deltaAngle);
+            
+            // 動態調整參考環與輔助光源強度
+            updateRingIntensity(currentRPM);
+            
+            // 根據轉速動態調整粒子系統緩慢自轉，增加視覺效果
+            stars.rotation.y += 0.0015 * (currentRPM / 500);
+            stars.rotation.x += 0.0008 * (currentRPM / 500);
+            
+            // 更新軌道控制
+            controls.update();
+            
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // 啟動動畫
+        animate();
+        
+        // 處理視窗尺寸變化
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // 小提示: 在控制台可動態調整轉速，滑桿範圍0-1000，支援即時更新。
+        console.log('3D 長方形鏡片翻轉教學 | 軸心: 長邊中軸 (Z軸) | 可調轉速 0~1000 RPM | 繞Z軸旋轉');
+        
+        // 增加點擊鏡片的互動教學提示
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        window.addEventListener('click', (event) => {
+            mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+            mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(lens, true);
+            if (intersects.length > 0) {
+                const tipDiv = document.createElement('div');
+                tipDiv.textContent = '✨ 鏡片正繞 Z 軸旋轉 (長邊中軸) | 轉速可調，觀察連續360°翻轉 ✨';
+                tipDiv.style.position = 'fixed';
+                tipDiv.style.bottom = '90px';
+                tipDiv.style.left = '20px';
+                tipDiv.style.backgroundColor = '#66ffaacc';
+                tipDiv.style.color = '#1e1e2e';
+                tipDiv.style.padding = '6px 14px';
+                tipDiv.style.borderRadius = '28px';
+                tipDiv.style.fontSize = '14px';
+                tipDiv.style.fontWeight = 'bold';
+                tipDiv.style.backdropFilter = 'blur(8px)';
+                tipDiv.style.zIndex = '100';
+                tipDiv.style.pointerEvents = 'none';
+                document.body.appendChild(tipDiv);
+                setTimeout(() => {
+                    tipDiv.remove();
+                }, 1600);
+            }
+        });
+        
+        // 額外增加說明小卡
+        const noteDiv = document.createElement('div');
+        noteDiv.style.position = 'absolute';
+        noteDiv.style.bottom = '100px';
+        noteDiv.style.right = '20px';
+        noteDiv.style.backgroundColor = 'rgba(0,0,0,0.55)';
+        noteDiv.style.color = '#ccffcc';
+        noteDiv.style.fontSize = '12px';
+        noteDiv.style.padding = '4px 12px';
+        noteDiv.style.borderRadius = '16px';
+        noteDiv.style.fontFamily = 'monospace';
+        noteDiv.style.backdropFilter = 'blur(4px)';
+        noteDiv.innerHTML = '🖱️ 滑鼠拖曳旋轉視角 | 旋轉軸: Z軸 (藍色線) | 鏡片繞Z軸翻轉';
+        document.body.appendChild(noteDiv);
+        
+        // 為了更清楚展示Z軸，添加一個環繞Z軸的動態粒子環 (可選)
+        const particleRingCount = 200;
+        const ringParticlesGeo = new THREE.BufferGeometry();
+        const ringPositions = new Float32Array(particleRingCount * 3);
+        for (let i = 0; i < particleRingCount; i++) {
+            const angle = (i / particleRingCount) * Math.PI * 2;
+            const radius = 1.45;
+            ringPositions[i*3] = Math.cos(angle) * radius;
+            ringPositions[i*3+1] = Math.sin(angle) * radius;
+            ringPositions[i*3+2] = 0;
+        }
+        ringParticlesGeo.setAttribute('position', new THREE.BufferAttribute(ringPositions, 3));
+        const ringPointsMat = new THREE.PointsMaterial({ color: 0x66ffaa, size: 0.03, transparent: true, opacity: 0.5 });
+        const ringPoints = new THREE.Points(ringParticlesGeo, ringPointsMat);
+        scene.add(ringPoints);
+        
+        // 讓環繞粒子輕微旋轉 (獨立效果，不影響主體)
+        function animateRing() {
+            ringPoints.rotation.z += 0.008;
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+        
+        // 在軸線兩端添加閃爍光暈效果 (增加教學辨識)
+        const axisGlowMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xff4411, transparent: true, opacity: 0.7 });
+        const frontGlowRing = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), axisGlowMat);
+        frontGlowRing.position.set(0, 0, 1.65);
+        const backGlowRing = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), axisGlowMat);
+        backGlowRing.position.set(0, 0, -1.65);
+        scene.add(frontGlowRing);
+        scene.add(backGlowRing);
+    </script>
+	
+	
+		    <!-- 返回按鈕應該在這裡 -->
+    <button onclick="window.location.href='index.html'" 
+            style="position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; background: #4a6fa5; color: white; border: none; border-radius: 5px; cursor: pointer; z-index: 9999;">
+        返回主選單
+    </button>	
+	
+</body>
+</html>
