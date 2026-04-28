@@ -49,8 +49,8 @@
         .info-badge { background: #2c5a7a; border-radius: 4px; padding: 4px 8px; font-size: 11px; margin-top: 8px; text-align: center; }
         .mode-badge { background: #444; border-radius: 16px; padding: 2px 8px; font-size: 10px; display: inline-block; margin-left: 8px; }
     </style>
-	
-		    <!-- ========== 防護區塊：禁止右鍵 + 禁止 F12 開發者工具 ========== -->
+			
+					    <!-- ========== 防護區塊：禁止右鍵 + 禁止 F12 開發者工具 ========== -->
     <script>
         (function() {
             // 1. 禁止右鍵選單 (contextmenu)
@@ -121,6 +121,8 @@
     <!-- ========== 防護區塊結束 ========== -->
 	
 	
+	
+	
 </head>
 <body>
 <div class="version-info">Ver.三模式整合版 | 動態灑水區段(A) / 定點噴射(B) / 全區連續(C) - 點擊模式切換</div>
@@ -184,22 +186,22 @@
             ja: { heightLabel:"ノズル高さ (4-15m):", heightDisplay:"高さ: ", delayLabel:"放水遅延 (0-60秒):", delayDisplay:"遅延: ", countdownText:"⏱️ カウントダウン: ", resetBtn:"リセット", fireCount:"🔥 火点: ", detectorStatus:"検出器: ", nearestFire:"最寄り: ", monitoring:"監視中", alarm:"警報中", extinguishing:"消火中", none:"なし", logTitle:"履歴", instructions:"右クリックで火点 | モードA/B/C切替", systemStart:"起動", systemReset:"リセット", fireAdded:"火点追加", fireDetected:"火点検出", alarmActivated:"、警報", extinguishingFire:"放水中 → ", fireExtinguished:"消火完了", allFiresExtinguished:"全消火", unitM:"m", unitS:"秒", waterZone:"放水ゾーン: ", modeA:"モードA (動的ゾーン)", modeB:"モードB (定点集中)", modeC:"モードC (連続0-36m)", modeASwitch:"モードAに切替：距離に応じたゾーン放水", modeBSwitch:"モードBに切替：火点を直接狙う", modeCSwitch:"モードCに切替：0~36m連続放水" }
         };
         let currentLanguage = 'zh';
-        function updateLanguage() {
-            const t = translations[currentLanguage];
-            document.getElementById('height-label').textContent = t.heightLabel;
-            document.getElementById('delay-label').textContent = t.delayLabel;
-            document.getElementById('reset-btn').textContent = t.resetBtn;
-            document.getElementById('log-title').innerHTML = t.logTitle;
-            document.getElementById('instructions').innerHTML = t.instructions;
-            document.getElementById('countdown-timer').innerHTML = t.countdownText + '<span id="countdown-value">0</span>' + t.unitS;
-            const hv = parseFloat(heightSlider.value);
-            document.getElementById('height-display').innerHTML = t.heightDisplay + hv.toFixed(1) + t.unitM;
-            const dv = parseFloat(delaySlider.value);
-            document.getElementById('delay-display').innerHTML = t.delayDisplay + dv + t.unitS;
-            document.getElementById('fire-count').innerHTML = t.fireCount + firePoints.length;
-            updateDetectorData();
-            updateModeUI();
-        }
+		function updateLanguage() {
+    const t = translations[currentLanguage];
+    document.getElementById('height-label').textContent = t.heightLabel;
+    document.getElementById('delay-label').textContent = t.delayLabel;
+    document.getElementById('reset-btn').textContent = t.resetBtn;
+    document.getElementById('log-title').innerHTML = t.logTitle;
+    document.getElementById('instructions').innerHTML = t.instructions;
+    document.getElementById('countdown-timer').innerHTML = t.countdownText + '<span id="countdown-value">0</span>' + (currentLanguage === 'zh' ? '秒' : (currentLanguage === 'ja' ? '秒' : 's'));
+    const hv = parseFloat(heightSlider.value);
+    document.getElementById('height-display').innerHTML = t.heightDisplay + hv.toFixed(1) + t.unitM;
+    const dv = parseFloat(delaySlider.value);
+    document.getElementById('delay-display').innerHTML = t.delayDisplay + dv + (currentLanguage === 'zh' ? '秒' : (currentLanguage === 'ja' ? '秒' : 's'));
+    document.getElementById('fire-count').innerHTML = t.fireCount + firePoints.length;
+    updateDetectorData();
+    updateModeUI();  // 確保模式UI文字也更新
+}
         
         // ======================= Three.js 場景 (側牆安裝風格) =======================
         const scene = new THREE.Scene();
@@ -617,15 +619,27 @@
             addLogEntry( currentMode === "A" ? translations[currentLanguage].modeASwitch : (currentMode === "B" ? translations[currentLanguage].modeBSwitch : translations[currentLanguage].modeCSwitch), "normal");
         }
         
-        function updateModeUI() {
-            const t = translations[currentLanguage];
-            document.getElementById('current-mode-badge').innerHTML = currentMode === "A" ? "A模式 (動態區段)" : (currentMode === "B" ? "B模式 (定點集中)" : "C模式 (全區連續)");
-            document.getElementById('mode-specific-hint').innerHTML = currentMode === "A" ? "💧 A模式: 依火點距離自動選取0~23m或23~40m區間灑水" : (currentMode === "B" ? "💧 B模式: 直接瞄準火點中心集中噴射滅火" : "💧 C模式: 全範圍0~36m連續灑水，完整覆蓋");
-            document.getElementById('mode-desc-text').innerHTML = currentMode === "A" ? "📐 火點距離 ≤23m → 灑水0~23m | 距離>23m → 灑水23~40m" : (currentMode === "B" ? "🎯 火點距離任意 → 水柱集中於火點位置及其周邊，快速滅火" : "🌊 C模式: 0~36m全區連續放水，不切換區段，全面覆蓋");
-            document.getElementById('mode-a-btn').classList.toggle('active', currentMode === "A");
-            document.getElementById('mode-b-btn').classList.toggle('active', currentMode === "B");
-            document.getElementById('mode-c-btn').classList.toggle('active', currentMode === "C");
-        }
+		function updateModeUI() {
+    const t = translations[currentLanguage];
+    const modeNames = { A: t.modeA, B: t.modeB, C: t.modeC };
+    document.getElementById('current-mode-badge').innerHTML = modeNames[currentMode];
+    
+    // 更新模式提示文字（使用當前語言）
+    if (currentMode === "A") {
+        document.getElementById('mode-specific-hint').innerHTML = "💧 " + (currentLanguage === 'zh' ? "A模式: 依火點距離自動選取0~23m或23~40m區間灑水" : (currentLanguage === 'ja' ? "Aモード: 火点距離に応じて0~23mまたは23~40mゾーン放水" : "Mode A: Auto-select 0-23m or 23-40m zone based on fire distance"));
+        document.getElementById('mode-desc-text').innerHTML = "📐 " + (currentLanguage === 'zh' ? "火點距離 ≤23m → 灑水0~23m | 距離>23m → 灑水23~40m" : (currentLanguage === 'ja' ? "火点距離 ≤23m → 放水0~23m | 距離>23m → 放水23~40m" : "Fire distance ≤23m → water 0-23m | distance >23m → water 23-40m"));
+    } else if (currentMode === "B") {
+        document.getElementById('mode-specific-hint').innerHTML = "🎯 " + (currentLanguage === 'zh' ? "B模式: 直接瞄準火點中心集中噴射滅火" : (currentLanguage === 'ja' ? "Bモード: 火点を直接狙って集中放水" : "Mode B: Direct concentrated spray at fire center"));
+        document.getElementById('mode-desc-text').innerHTML = "🎯 " + (currentLanguage === 'zh' ? "火點距離任意 → 水柱集中於火點位置及其周邊" : (currentLanguage === 'ja' ? "任意の距離 → 火点とその周辺に集中放水" : "Any distance → Concentrated water jet at fire location"));
+    } else if (currentMode === "C") {
+        document.getElementById('mode-specific-hint').innerHTML = "🌊 " + (currentLanguage === 'zh' ? "C模式: 全範圍0~36m連續灑水，完整覆蓋" : (currentLanguage === 'ja' ? "Cモード: 0~36m連続放水、完全カバー" : "Mode C: Full continuous 0-36m water coverage"));
+        document.getElementById('mode-desc-text').innerHTML = "🌊 " + (currentLanguage === 'zh' ? "0~36m全區連續放水，不切換區段" : (currentLanguage === 'ja' ? "0~36m連続放水、ゾーン切替なし" : "0-36m continuous water, no zone switching"));
+    }
+    
+    document.getElementById('mode-a-btn').classList.toggle('active', currentMode === "A");
+    document.getElementById('mode-b-btn').classList.toggle('active', currentMode === "B");
+    document.getElementById('mode-c-btn').classList.toggle('active', currentMode === "C");
+}
         
         // 事件綁定
         document.getElementById('mode-a-btn').addEventListener('click', () => switchMode("A"));
