@@ -1,3 +1,185 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>密碼保護頁面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ========== 修改重點 1：body 不設定背景，讓內容各自設定 ========== */
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+        }
+
+        /* 鎖定畫面的背景（維持原本的深色漸層） */
+        .lock-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .lock-card {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 40px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .lock-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .lock-card h2 {
+            color: #f1f5f9;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .lock-card p {
+            color: #94a3b8;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 14px 18px;
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 60px;
+            color: #f1f5f9;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+            text-align: center;
+            letter-spacing: 4px;
+        }
+
+        .password-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+
+        .unlock-btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none;
+            border-radius: 60px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .unlock-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+        }
+
+        .unlock-btn:active {
+            transform: translateY(0);
+        }
+
+        .error-msg {
+            color: #f87171;
+            font-size: 14px;
+            margin-top: 15px;
+            min-height: 40px;
+        }
+
+        .hint {
+            color: #64748b;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+
+        /* 隱藏鎖定畫面 */
+        .lock-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* ========== 修改重點 2：主內容的背景 ========== */
+        /* 這裡放你原本 index 設定的底色 */
+        .main-content {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease;
+            /* ⭐ 加上你原本的底色（從你的 index 複製過來） */
+            background-color: #fefcf7;
+        }
+
+        .main-content.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* ========== 修改重點 3：確保主內容內的 body 樣式繼承正確 ========== */
+        /* 你原本 index 的 body 樣式改到這裡 */
+        .main-content body {
+            background-color: #fefcf7;
+            color: #2d2a24;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========== 密碼鎖定畫面 ========== -->
+    <div id="lockScreen" class="lock-screen">
+        <div class="lock-card">
+            <div class="lock-icon">🔒</div>
+            <h2>受保護的頁面</h2>
+            <p>請輸入密碼以繼續瀏覽</p>
+            <input type="password" id="passwordInput" class="password-input" placeholder="請輸入密碼" autocomplete="off">
+            <button id="unlockBtn" class="unlock-btn">解鎖進入</button>
+            <div id="errorMsg" class="error-msg"></div>
+            <div class="hint">💡 提示：預設密碼是 <strong style="color:#3b82f6">向您獻上問候</strong></div>
+        </div>
+    </div>
+
+    <!-- ========== 主要內容 ========== -->
+    <div id="mainContent" class="main-content">
+	 <!-- 你的完整 index 內容放這裡 -->
+
+
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -264,11 +446,11 @@
             </a>	
 			
 			                        <!-- 工具 8 -->
-            <a href="Watercannon(small).html" class="tool-card">
+            <a href="放水模式合併展示.html" class="tool-card">
                 <div class="tool-number">8</div>
                 <div class="tool-title">放水槍概念動畫解說</div>
                 <div class="tool-desc">視覺化放水槍概念動畫</div>
-                <div class="tool-file">Water cannon (small) </div>
+                <div class="tool-file">Water cannon (small) -2</div>
 
             </a>	
 			
@@ -280,14 +462,14 @@
                 <div class="tool-file">一齊開放閥二次側流速計算</div>
 
             </a>
-			
+															 <!-- 工具 10 -->
 			<a href="撒水密度討論.html" class="tool-card">
                 <div class="tool-number">10</div>
                 <div class="tool-title">用水量與撒水密度關聯</div>
                 <div class="tool-desc">抑制燃燒滅火用水密度</div>
                 <div class="tool-file">撒水密度討論</div>
             </a>
-
+												 <!-- 工具 11 -->
 			<a href="走查鏡片旋轉.html" class="tool-card">
                 <div class="tool-number">11</div>
                 <div class="tool-title">走查型探測器內部觀察</div>
@@ -295,8 +477,6 @@
                 <div class="tool-file">掃描方式討論</div>
 
             </a>
-
-	
 			
         </div>
         
@@ -349,6 +529,99 @@
                 const filename = card.getAttribute('href');
                 card.querySelector('.tool-file').textContent = `檔案：${filename}`;
             });
+        });
+    </script>
+</body>
+</html>
+
+    <script>
+        // ========== 密碼設定 ==========
+        const CORRECT_PASSWORD = "hijim";
+		
+		    // ========== 禁止右鍵與開發者工具 ==========
+    // 1. 禁止滑鼠右鍵
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    });
+    
+    // 2. 禁止選取文字
+    document.addEventListener('selectstart', function(e) {
+        e.preventDefault();
+        return false;
+    });
+    
+    // 3. 禁止鍵盤快捷鍵
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F12') {
+            e.preventDefault();
+            return false;
+        }
+        if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+            e.preventDefault();
+            return false;
+        }
+        if (e.ctrlKey && e.key === 'u') {
+            e.preventDefault();
+            return false;
+        }
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            return false;
+        }
+    });
+        
+        // ========== 功能程式碼 ==========
+        const lockScreen = document.getElementById('lockScreen');
+        const mainContent = document.getElementById('mainContent');
+        const passwordInput = document.getElementById('passwordInput');
+        const unlockBtn = document.getElementById('unlockBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        
+        function checkAlreadyUnlocked() {
+            const isUnlocked = sessionStorage.getItem('pageUnlocked');
+            if (isUnlocked === 'true') {
+                unlockPage();
+            }
+        }
+        
+        function unlockPage() {
+            lockScreen.classList.add('hidden');
+            mainContent.classList.add('visible');
+            sessionStorage.setItem('pageUnlocked', 'true');
+        }
+        
+        function verifyPassword() {
+            const inputPassword = passwordInput.value;
+            
+            if (inputPassword === CORRECT_PASSWORD) {
+                unlockPage();
+                errorMsg.innerHTML = '';
+            } else {
+                errorMsg.innerHTML = '❌ 密碼錯誤，請再試一次';
+                passwordInput.value = '';
+                passwordInput.focus();
+                
+                lockScreen.style.animation = 'none';
+                setTimeout(() => {
+                    lockScreen.style.animation = 'fadeInUp 0.6s ease';
+                }, 10);
+            }
+        }
+        
+        unlockBtn.addEventListener('click', verifyPassword);
+        passwordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verifyPassword();
+            }
+        });
+        
+        passwordInput.focus();
+        checkAlreadyUnlocked();
+        
+        history.pushState(null, null, location.href);
+        window.addEventListener('popstate', function() {
+            history.pushState(null, null, location.href);
         });
     </script>
 </body>

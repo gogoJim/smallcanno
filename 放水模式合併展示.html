@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>3D噴頭滅火模擬器 - 三模式整合版 (A/B/C模式)</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #container { position: relative; width: 100%; height: 100vh; }
+        #controls {
+            position: absolute; top: 20px; left: 20px; background: rgba(30, 30, 40, 0.85); backdrop-filter: blur(8px);
+            padding: 15px; border-radius: 12px; z-index: 100; width: 360px; color: white; border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 14px;
+        }
+        .mode-selector { background: rgba(0,0,0,0.5); border-radius: 8px; padding: 8px; margin-bottom: 12px; border-left: 3px solid #ffaa44; }
+        .mode-btn-group { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .mode-btn { flex: 1; background: #2c3e50; border: none; color: white; padding: 6px 4px; border-radius: 20px; cursor: pointer; transition: 0.2s; font-weight: bold; font-size: 13px; text-align: center; }
+        .mode-btn.active { background: #ffaa44; color: #1e2a2e; box-shadow: 0 0 8px rgba(255,170,68,0.5); }
+        .mode-desc { font-size: 11px; margin-top: 6px; color: #ccc; text-align: center; }
+        .btn { padding: 8px 15px; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; margin-right: 5px; transition: 0.2s; }
+        #reset-btn { background: #f44336; }
+        #reset-btn:hover { background: #d32f2f; }
+        #height-display, #delay-display, #range-display { margin-top: 5px; font-weight: bold; font-size: 13px; }
+        #instructions {
+            position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.65); color: white; padding: 8px 15px;
+            border-radius: 20px; z-index: 100; font-size: 12px; pointer-events: none; backdrop-filter: blur(4px);
+        }
+        #fire-count { margin-top: 10px; font-weight: bold; }
+        #detector-data { margin-top: 12px; padding: 10px; background: rgba(0,0,0,0.4); border-radius: 8px; font-family: monospace; font-size: 13px; }
+        .alarm-indicator { width: 14px; height: 14px; border-radius: 50%; display: inline-block; margin-right: 6px; background-color: #ccc; vertical-align: middle; }
+        .alarm-active { animation: blink 0.5s infinite alternate; }
+        @keyframes blink { from { background-color: #ffaa00; } to { background-color: #ff3300; } }
+        #log-container {
+            position: absolute; top: 20px; right: 20px; width: 280px; max-height: 70vh; overflow-y: auto;
+            background: rgba(0,0,0,0.75); backdrop-filter: blur(5px); padding: 12px; border-radius: 12px;
+            z-index: 100; font-size: 11px; box-shadow: 0 0 15px rgba(0,0,0,0.3); color: #eee; border: 1px solid #444;
+        }
+        .log-entry { margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #444; }
+        .log-time { font-weight: bold; color: #aaa; }
+        .log-event { color: #ddd; }
+        .log-warning { color: #ffaa66; }
+        .log-alarm { color: #ff6666; }
+        .log-extinguish { color: #66ccff; }
+        .language-selector { margin-bottom: 12px; }
+        .language-selector select { width: 100%; padding: 6px; border-radius: 6px; background: #222; color: white; border: 1px solid #555; }
+        #countdown-timer { margin-top: 10px; padding: 8px; background: rgba(200,60,30,0.6); border-radius: 8px; text-align: center; font-weight: bold; font-size: 18px; display: none; letter-spacing: 1px; }
+        .version-info { position: absolute; bottom: 15px; right: 15px; color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.4); padding: 2px 8px; border-radius: 8px; font-size: 10px; z-index: 100; pointer-events: none; }
+        input, select { cursor: pointer; }
+        .info-badge { background: #2c5a7a; border-radius: 4px; padding: 4px 8px; font-size: 11px; margin-top: 8px; text-align: center; }
+        .mode-badge { background: #444; border-radius: 16px; padding: 2px 8px; font-size: 10px; display: inline-block; margin-left: 8px; }
+    </style>
+	
+		    <!-- ========== 防護區塊：禁止右鍵 + 禁止 F12 開發者工具 ========== -->
+    <script>
+        (function() {
+            // 1. 禁止右鍵選單 (contextmenu)
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            // 2. 防堵開發者工具快捷鍵
+            function blockDevTools(e) {
+                // F12 鍵
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+Shift+I (Windows/Linux) 或 Cmd+Option+I (Mac)
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+Shift+J (Windows/Linux) 或 Cmd+Option+J (Mac)
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+U (檢視原始碼)
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u')) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+S (儲存頁面)
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'S' || e.key === 's')) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+Shift+C (開啟選取元素)
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+                    e.preventDefault();
+                    return false;
+                }
+                return true;
+            }
+            
+            document.addEventListener('keydown', blockDevTools);
+            
+            // 3. 偵測開發者工具是否開啟 (透過console被呼叫)
+            let devtoolsOpen = false;
+            const element = new Image();
+            Object.defineProperty(element, 'id', {
+                get: function() {
+                    devtoolsOpen = true;
+                    console.warn('偵測到開發者工具');
+                    return '';
+                }
+            });
+            setInterval(function() {
+                devtoolsOpen = false;
+                console.log(element);
+                console.clear();
+                if (devtoolsOpen) {
+                    console.clear();
+                    // 可選：顯示警告或重新導向
+                    // alert('請關閉開發者工具後繼續使用');
+                }
+            }, 1000);
+        })();
+    </script>
+    <!-- ========== 防護區塊結束 ========== -->
+	
+	
+</head>
+<body>
+<div class="version-info">Ver.三模式整合版 | 動態灑水區段(A) / 定點噴射(B) / 全區連續(C) - 點擊模式切換</div>
+    <div id="container">
+        <div id="controls">
+            <div class="language-selector">
+                <label for="language-select" style="font-size:13px;">🌐 語言:</label>
+                <select id="language-select">
+                    <option value="en">English</option>
+                    <option value="zh" selected>中文</option>
+                    <option value="ja">日本語</option>
+                </select>
+            </div>
+            
+            <!-- 模式切換區塊 (A/B/C) -->
+            <div class="mode-selector">
+                <div style="display: flex; justify-content: space-between; align-items:center;">
+                    <span>💧 放水模式</span>
+                    <span id="current-mode-badge" class="mode-badge">A模式 (動態區段)</span>
+                </div>
+                <div class="mode-btn-group">
+                    <button id="mode-a-btn" class="mode-btn active">A模式 - 動態區段</button>
+                    <button id="mode-b-btn" class="mode-btn">B模式 - 定點集中</button>
+                    <button id="mode-c-btn" class="mode-btn">C模式 - 全區連續</button>
+                </div>
+                <div id="mode-desc-text" class="mode-desc">📐 火點距離 ≤23m → 灑水0~23m | 距離>23m → 灑水23~40m (涵蓋火點)</div>
+            </div>
+            
+            <label for="height-slider" id="height-label">噴頭高度 (4-15m):</label>
+            <input type="range" id="height-slider" min="4" max="15" step="0.1" value="10">
+            <div id="height-display">當前高度: 10.0m</div>
+            <label for="delay-slider" id="delay-label" style="margin-top:8px; display:block;">放水延遲 (0-60秒):</label>
+            <input type="range" id="delay-slider" min="0" max="60" step="1" value="0">
+            <div id="delay-display">放水延遲: 0秒</div>
+            <div id="range-display" style="background:#1e2a3a; padding:4px 8px; border-radius:6px; margin-top:6px;">📏 灑水策略: --</div>
+            <div id="countdown-timer">⏱️ 放水倒數: <span id="countdown-value">0</span>秒</div>
+            <button id="reset-btn" class="btn">🧹 復歸 / 重置</button>
+            <div id="fire-count">🔥 火點數量: 0</div>
+            <div id="detector-data">
+                <span class="alarm-indicator"></span> <span id="detector-status">探測器狀態: 監視中</span><br>
+                <span id="nearest-fire">📍 最近火點: 無</span>
+                <span id="distance-info" style="display:block; font-size:10px; color:#aaa; margin-top:4px;">📐 水平距離: --</span>
+            </div>
+            <div class="info-badge" id="mode-specific-hint">💧 當前模式: A模式 (依據火點距離自動選取0~23m或23~40m區間灑水)</div>
+        </div>
+        <div id="log-container">
+            <h3 id="log-title" style="margin:0 0 8px 0; font-size:14px;">📋 系統履歷</h3>
+            <div id="log-entries"></div>
+        </div>
+        <div id="instructions">🖱️ 右鍵點擊地面放置火點 | 滑鼠拖曳旋轉視角 | 滾輪縮放 | 可切換A/B/C模式體驗不同灑水策略</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+
+    <script>
+        // ======================= 多語言資源 (新增C模式描述) =======================
+        const translations = {
+            en: { heightLabel:"Nozzle Height (4-15m):", heightDisplay:"Height: ", delayLabel:"Delay (0-60s):", delayDisplay:"Delay: ", countdownText:"⏱️ Countdown: ", resetBtn:"Reset", fireCount:"🔥 Fires: ", detectorStatus:"Detector: ", nearestFire:"Nearest: ", monitoring:"Monitoring", alarm:"ALARM", extinguishing:"EXTINGUISHING", none:"None", logTitle:"System Log", instructions:"Right-click ground → add fire | Switch Mode A/B/C", systemStart:"System started", systemReset:"System reset", fireAdded:"Fire added", fireDetected:"Fire detected", alarmActivated:", alarm", extinguishingFire:"Water jet active → ", fireExtinguished:"Fire extinguished", allFiresExtinguished:"All fires out", unitM:"m", unitS:"s", waterZone:"Water zone: ", modeA:"Mode A (Dynamic segment)", modeB:"Mode B (Point concentrated)", modeC:"Mode C (Full continuous 0-36m)", modeASwitch:"Switched to Mode A: dynamic coverage based on distance", modeBSwitch:"Switched to Mode B: point-spray at fire location", modeCSwitch:"Switched to Mode C: continuous water coverage 0~36m (full range)" },
+            zh: { heightLabel:"噴頭高度 (4-15m):", heightDisplay:"當前高度: ", delayLabel:"放水延遲 (0-60秒):", delayDisplay:"放水延遲: ", countdownText:"⏱️ 放水倒數: ", resetBtn:"復歸", fireCount:"🔥 火點數量: ", detectorStatus:"探測器狀態: ", nearestFire:"最近火點: ", monitoring:"監視中", alarm:"警報中", extinguishing:"滅火中", none:"無", logTitle:"系統履歷", instructions:"右鍵點擊地面放置火點 | 可切換A/B/C模式體驗不同灑水策略", systemStart:"系統啟動完成", systemReset:"系統已復歸", fireAdded:"新增火點", fireDetected:"偵測到火點", alarmActivated:"，警報啟動", extinguishingFire:"噴水滅火中 → ", fireExtinguished:"火點已撲滅", allFiresExtinguished:"所有火點已撲滅", unitM:"m", unitS:"秒", waterZone:"灑水區間: ", modeA:"A模式 (動態區段)", modeB:"B模式 (定點噴射)", modeC:"C模式 (全區連續0~36m)", modeASwitch:"已切換至A模式：依據火點距離動態涵蓋區間", modeBSwitch:"已切換至B模式：直接瞄準火點集中噴射", modeCSwitch:"已切換至C模式：連續灑水覆蓋0~36m全範圍" },
+            ja: { heightLabel:"ノズル高さ (4-15m):", heightDisplay:"高さ: ", delayLabel:"放水遅延 (0-60秒):", delayDisplay:"遅延: ", countdownText:"⏱️ カウントダウン: ", resetBtn:"リセット", fireCount:"🔥 火点: ", detectorStatus:"検出器: ", nearestFire:"最寄り: ", monitoring:"監視中", alarm:"警報中", extinguishing:"消火中", none:"なし", logTitle:"履歴", instructions:"右クリックで火点 | モードA/B/C切替", systemStart:"起動", systemReset:"リセット", fireAdded:"火点追加", fireDetected:"火点検出", alarmActivated:"、警報", extinguishingFire:"放水中 → ", fireExtinguished:"消火完了", allFiresExtinguished:"全消火", unitM:"m", unitS:"秒", waterZone:"放水ゾーン: ", modeA:"モードA (動的ゾーン)", modeB:"モードB (定点集中)", modeC:"モードC (連続0-36m)", modeASwitch:"モードAに切替：距離に応じたゾーン放水", modeBSwitch:"モードBに切替：火点を直接狙う", modeCSwitch:"モードCに切替：0~36m連続放水" }
+        };
+        let currentLanguage = 'zh';
+        function updateLanguage() {
+            const t = translations[currentLanguage];
+            document.getElementById('height-label').textContent = t.heightLabel;
+            document.getElementById('delay-label').textContent = t.delayLabel;
+            document.getElementById('reset-btn').textContent = t.resetBtn;
+            document.getElementById('log-title').innerHTML = t.logTitle;
+            document.getElementById('instructions').innerHTML = t.instructions;
+            document.getElementById('countdown-timer').innerHTML = t.countdownText + '<span id="countdown-value">0</span>' + t.unitS;
+            const hv = parseFloat(heightSlider.value);
+            document.getElementById('height-display').innerHTML = t.heightDisplay + hv.toFixed(1) + t.unitM;
+            const dv = parseFloat(delaySlider.value);
+            document.getElementById('delay-display').innerHTML = t.delayDisplay + dv + t.unitS;
+            document.getElementById('fire-count').innerHTML = t.fireCount + firePoints.length;
+            updateDetectorData();
+            updateModeUI();
+        }
+        
+        // ======================= Three.js 場景 (側牆安裝風格) =======================
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a1030);
+        scene.fog = new THREE.FogExp2(0x0a1030, 0.006);
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.getElementById('container').appendChild(renderer.domElement);
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; controls.dampingFactor = 0.06;
+        controls.target.set(0, 5, 0);
+        camera.position.set(18, 12, 20);
+        
+        // 光源
+        const ambient = new THREE.AmbientLight(0x404060); scene.add(ambient);
+        const mainLight = new THREE.DirectionalLight(0xfff5e0, 1.0); mainLight.position.set(8, 20, 5); mainLight.castShadow = true; scene.add(mainLight);
+        const fillLight = new THREE.PointLight(0x4488ff, 0.4); fillLight.position.set(-5, 8, 10); scene.add(fillLight);
+        
+        // 地面與牆面
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0x3a6b2f, roughness: 0.7, metalness: 0.1 });
+        const groundPlane = new THREE.Mesh(new THREE.PlaneGeometry(42, 60), groundMat);
+        groundPlane.rotation.x = -Math.PI/2; groundPlane.position.y = -0.5; groundPlane.receiveShadow = true;
+        scene.add(groundPlane);
+        const gridHelper = new THREE.GridHelper(44, 28, 0x88aa88, 0x446644); gridHelper.position.y = -0.4; scene.add(gridHelper);
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0x8a9aa8, side: THREE.DoubleSide, roughness: 0.5 });
+        const wall = new THREE.Mesh(new THREE.PlaneGeometry(44, 20), wallMat); wall.position.set(-18.5, 9, 0); wall.rotation.y = Math.PI/2; scene.add(wall);
+        
+        // 噴頭模型
+        const nozzleGeo = new THREE.SphereGeometry(0.38, 32, 32);
+        const nozzleMat = new THREE.MeshStandardMaterial({ color: 0x5a9cff, metalness: 0.85, roughness: 0.2, emissive: 0x004466 });
+        const nozzle = new THREE.Mesh(nozzleGeo, nozzleMat); nozzle.castShadow = true; scene.add(nozzle);
+        const detectorGeo = new THREE.SphereGeometry(0.26, 16, 16);
+        const detectorMat = new THREE.MeshStandardMaterial({ color: 0xff5555, emissive: 0x441111 });
+        const detectorObj = new THREE.Mesh(detectorGeo, detectorMat); scene.add(detectorObj);
+        
+        function updateNozzlePosition(h) {
+            nozzle.position.set(-17.2, h, 0);
+            detectorObj.position.set(-17.2, h + 0.42, 0.65);
+        }
+        const heightSlider = document.getElementById('height-slider');
+        heightSlider.addEventListener('input', (e) => { updateNozzlePosition(parseFloat(e.target.value)); updateLanguage(); });
+        updateNozzlePosition(10);
+        const delaySlider = document.getElementById('delay-slider');
+        delaySlider.addEventListener('input', () => updateLanguage());
+        
+        // ======================= 全局變數 =======================
+        let firePoints = [];
+        let currentMode = "A";        // "A", "B", "C"
+        let activeWaterTargets = [];
+        let currentTargetFire = null;
+        let isAlarming = false, isSpraying = false;
+        let sprayStartTime = 0;
+        const SPRAY_DURATION = 8000;
+        let alarmIntervalId = null, countdownIntervalId = null;
+        let waterParticles = [];
+        const waterDropGeo = new THREE.SphereGeometry(0.09, 6, 6);
+        const waterMaterial = new THREE.MeshStandardMaterial({ color: 0x3a86ff, emissive: 0x0088aa, transparent: true, opacity: 0.9 });
+        
+        // 輔助點陣列 (模式A與模式C共用邏輯，C模式使用0~36m連續範圍)
+        let hiddenAuxPoints = [];   // { mesh, position, parentFire, distFromNozzle }
+        
+        const fireBaseMat = new THREE.MeshStandardMaterial({ color: 0xff5500, emissive: 0xcc3300, emissiveIntensity: 0.8 });
+        const fireGeoObj = new THREE.SphereGeometry(0.55, 24, 24);
+        
+        // ========== 核心函數：根據模式與火點生成灑水區段點 (C模式: 0~36m全範圍) ==========
+        function getWaterSegmentAndPointsByMode(fire, mode) {
+            if (!fire) return { startDist: 0, endDist: 0, points: [], horizontalDist: 0 };
+            const nozzlePos = nozzle.position.clone();
+            const firePos = fire.position.clone();
+            const deltaX = firePos.x - nozzlePos.x;
+            const deltaZ = firePos.z - nozzlePos.z;
+            const horizontalDist = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
+            let waterStartDist, waterEndDist;
+            
+            if (mode === "A") {
+                if (horizontalDist <= 23) {
+                    waterStartDist = 0;
+                    waterEndDist = 23;
+                } else {
+                    waterStartDist = 23;
+                    waterEndDist = 40;
+                }
+            } else if (mode === "C") {
+                // C模式: 0~36m 連續覆蓋全範圍 (但最大36m, 避免過遠超出視覺)
+                waterStartDist = 0;
+                waterEndDist = 36;
+            } else {
+                // B模式不會呼叫此函數產生區段點，但防護
+                waterStartDist = 0;
+                waterEndDist = 0;
+            }
+            
+            const direction = new THREE.Vector3(deltaX, 0, deltaZ).normalize();
+            const nozzleGroundPos = new THREE.Vector3(nozzlePos.x, firePos.y + 0.3, nozzlePos.z);
+            const pointsCount = 20; // 密集一點表現連續感
+            const points = [];
+            const segmentLength = waterEndDist - waterStartDist;
+            if (segmentLength <= 0.01) return { startDist: waterStartDist, endDist: waterEndDist, points: [], horizontalDist };
+            
+            for (let i = 0; i <= pointsCount; i++) {
+                const t = i / pointsCount;
+                const distFromNozzle = waterStartDist + t * segmentLength;
+                const offset = direction.clone().multiplyScalar(distFromNozzle);
+                const pos = nozzleGroundPos.clone().add(offset);
+                // 稍微隨高度起伏更自然
+                pos.y = firePos.y + 0.2 + Math.sin(t * Math.PI) * 0.4;
+                const marker = new THREE.Mesh(new THREE.SphereGeometry(0.08, 4, 4), new THREE.MeshStandardMaterial({ transparent: true, visible: false }));
+                marker.position.copy(pos);
+                scene.add(marker);
+                points.push({ mesh: marker, position: pos.clone(), parentFire: fire, distFromNozzle });
+            }
+            return { startDist: waterStartDist, endDist: waterEndDist, points, horizontalDist };
+        }
+        
+        // 清除某個火點對應的所有輔助點
+        function clearAuxPointsForFire(fireMesh) {
+            for (let i = hiddenAuxPoints.length-1; i >= 0; i--) {
+                if (hiddenAuxPoints[i].parentFire === fireMesh) {
+                    scene.remove(hiddenAuxPoints[i].mesh);
+                    hiddenAuxPoints.splice(i,1);
+                }
+            }
+        }
+        
+        // 重新整理所有火點的輔助點 (根據當前模式)
+        function rebuildAllAuxPoints() {
+            // 清除所有現有輔助點
+            hiddenAuxPoints.forEach(ap => scene.remove(ap.mesh));
+            hiddenAuxPoints = [];
+            if (currentMode === "B") return; // B模式不需要輔助點
+            
+            for (let fire of firePoints) {
+                if (currentMode === "A" || currentMode === "C") {
+                    const segment = getWaterSegmentAndPointsByMode(fire, currentMode);
+                    hiddenAuxPoints.push(...segment.points);
+                    // 更新顯示策略提示
+                    const dist = segment.horizontalDist;
+                    if (currentMode === "A") {
+                        const zoneText = (dist <= 23) ? `0~23m (火點距離 ${dist.toFixed(1)}m)` : `23~40m (火點距離 ${dist.toFixed(1)}m)`;
+                        document.getElementById('range-display').innerHTML = `📏 灑水策略(A): ${zoneText}`;
+                    } else if (currentMode === "C") {
+                        document.getElementById('range-display').innerHTML = `📏 灑水策略(C): 全區連續0~36m (火點距離 ${dist.toFixed(1)}m)`;
+                    }
+                }
+            }
+        }
+        
+        // 新增火點 (根據當前模式生成輔助點)
+        function addFireAtPosition(x, z) {
+            const fireMesh = new THREE.Mesh(fireGeoObj, fireBaseMat.clone());
+            fireMesh.position.set(x, 0.4, z);
+            fireMesh.castShadow = true;
+            scene.add(fireMesh);
+            firePoints.push(fireMesh);
+            
+            if (currentMode === "A") {
+                const segment = getWaterSegmentAndPointsByMode(fireMesh, "A");
+                hiddenAuxPoints.push(...segment.points);
+                const dist = segment.horizontalDist;
+                const zoneText = (dist <= 23) ? `0~23m (距離 ${dist.toFixed(1)}m)` : `23~40m (距離 ${dist.toFixed(1)}m)`;
+                document.getElementById('range-display').innerHTML = `📏 灑水策略(A): ${zoneText}`;
+                addLogEntry(`${translations[currentLanguage].fireAdded} (${x.toFixed(1)}, ${z.toFixed(1)}) 距離=${dist.toFixed(1)}m, A動態區間`, "warning");
+            } 
+            else if (currentMode === "C") {
+                const segment = getWaterSegmentAndPointsByMode(fireMesh, "C");
+                hiddenAuxPoints.push(...segment.points);
+                const dist = segment.horizontalDist;
+                document.getElementById('range-display').innerHTML = `📏 灑水策略(C): 全區0~36m連續 (火點距離 ${dist.toFixed(1)}m)`;
+                addLogEntry(`${translations[currentLanguage].fireAdded} (${x.toFixed(1)}, ${z.toFixed(1)}) 距離=${dist.toFixed(1)}m, C模式全區連續`, "warning");
+            }
+            else {
+                // B模式
+                const dx = fireMesh.position.x - nozzle.position.x;
+                const dz = fireMesh.position.z - nozzle.position.z;
+                const dist = Math.sqrt(dx*dx + dz*dz);
+                document.getElementById('range-display').innerHTML = `📏 灑水策略(B): 定點瞄準火點 (距離 ${dist.toFixed(1)}m)`;
+                addLogEntry(`${translations[currentLanguage].fireAdded} (${x.toFixed(1)}, ${z.toFixed(1)}) B模式: 集中噴射`, "warning");
+            }
+            document.getElementById('fire-count').innerHTML = translations[currentLanguage].fireCount + firePoints.length;
+            updateDetectorData();
+            return fireMesh;
+        }
+        
+        function removeFire(fireMesh) {
+            const idx = firePoints.indexOf(fireMesh);
+            if (idx !== -1) {
+                scene.remove(fireMesh);
+                firePoints.splice(idx,1);
+                clearAuxPointsForFire(fireMesh);
+            }
+        }
+        
+        function resetSystem() {
+            if (alarmIntervalId) clearInterval(alarmIntervalId);
+            if (countdownIntervalId) clearInterval(countdownIntervalId);
+            isAlarming = false; isSpraying = false;
+            currentTargetFire = null;
+            activeWaterTargets = [];
+            document.getElementById('countdown-timer').style.display = 'none';
+            document.querySelector('.alarm-indicator').classList.remove('alarm-active');
+            detectorObj.material.color.setHex(0xff5555);
+            document.getElementById('range-display').innerHTML = `📏 灑水策略: --`;
+            document.getElementById('distance-info').innerHTML = `📐 水平距離: --`;
+            
+            [...firePoints].forEach(f => removeFire(f));
+            hiddenAuxPoints.forEach(ap => scene.remove(ap.mesh));
+            hiddenAuxPoints = [];
+            waterParticles.forEach(p => scene.remove(p));
+            waterParticles = [];
+            document.getElementById('fire-count').innerHTML = translations[currentLanguage].fireCount + "0";
+            updateDetectorData();
+            addLogEntry(translations[currentLanguage].systemReset, "normal");
+            nozzle.rotation.set(0, 0, 0);
+        }
+        
+        function findNearestFire() {
+            if (firePoints.length === 0) return null;
+            let nearest = null, minDist = Infinity;
+            const nPos = nozzle.position;
+            for (let f of firePoints) {
+                const d = f.position.distanceTo(nPos);
+                if (d < minDist) { minDist = d; nearest = f; }
+            }
+            return nearest;
+        }
+        
+        function updateDetectorData(statusText, nearestStr) {
+            const t = translations[currentLanguage];
+            let status = statusText || (isAlarming ? t.alarm : (isSpraying ? t.extinguishing : t.monitoring));
+            let nearest = nearestStr || (currentTargetFire ? `(${currentTargetFire.position.x.toFixed(1)}, ${currentTargetFire.position.z.toFixed(1)})` : (firePoints.length>0 ? "..." : t.none));
+            document.getElementById('detector-status').innerHTML = t.detectorStatus + status;
+            document.getElementById('nearest-fire').innerHTML = t.nearestFire + nearest;
+            const indicator = document.querySelector('.alarm-indicator');
+            if (status === t.alarm) indicator.classList.add('alarm-active');
+            else indicator.classList.remove('alarm-active');
+            if (currentTargetFire) {
+                const dx = currentTargetFire.position.x - nozzle.position.x;
+                const dz = currentTargetFire.position.z - nozzle.position.z;
+                const dist = Math.sqrt(dx*dx + dz*dz);
+                document.getElementById('distance-info').innerHTML = `📐 水平距離: ${dist.toFixed(1)}m | 模式: ${currentMode==='A'?'動態區段':(currentMode==='C'?'全區連續':'定點集中')}`;
+            } else if (firePoints.length > 0) {
+                const nearestFire = findNearestFire();
+                if (nearestFire) {
+                    const dx = nearestFire.position.x - nozzle.position.x;
+                    const dz = nearestFire.position.z - nozzle.position.z;
+                    const dist = Math.sqrt(dx*dx + dz*dz);
+                    document.getElementById('distance-info').innerHTML = `📐 最近火點距離: ${dist.toFixed(1)}m`;
+                }
+            } else {
+                document.getElementById('distance-info').innerHTML = `📐 水平距離: --`;
+            }
+        }
+        
+        function addLogEntry(msg, type) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString();
+            const logDiv = document.getElementById('log-entries');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">${timeStr}</span><br><span class="log-event log-${type}">${msg}</span>`;
+            logDiv.insertBefore(entry, logDiv.firstChild);
+            if (logDiv.children.length > 65) logDiv.removeChild(logDiv.lastChild);
+        }
+        
+        function startAlarm(fire) {
+            if (isAlarming || isSpraying) return;
+            if (!fire || !firePoints.includes(fire)) return;
+            isAlarming = true;
+            currentTargetFire = fire;
+            const dx = fire.position.x - nozzle.position.x;
+            const dz = fire.position.z - nozzle.position.z;
+            const dist = Math.sqrt(dx*dx + dz*dz);
+            if(currentMode === 'A') {
+                const zone = dist <= 23 ? "0~23m" : "23~40m";
+                document.getElementById('range-display').innerHTML = `📏 灑水策略(A): ${zone} (火點距離 ${dist.toFixed(1)}m)`;
+            } else if(currentMode === 'C') {
+                document.getElementById('range-display').innerHTML = `📏 灑水策略(C): 全區0~36m連續 (火點距離 ${dist.toFixed(1)}m)`;
+            } else {
+                document.getElementById('range-display').innerHTML = `📏 灑水策略(B): 定點瞄準火點 (距離 ${dist.toFixed(1)}m)`;
+            }
+            updateDetectorData(translations[currentLanguage].alarm, `(${fire.position.x.toFixed(1)}, ${fire.position.z.toFixed(1)})`);
+            const countdownDiv = document.getElementById('countdown-timer');
+            countdownDiv.style.display = 'block';
+            if (alarmIntervalId) clearInterval(alarmIntervalId);
+            alarmIntervalId = setInterval(() => {
+                if (!isAlarming) { clearInterval(alarmIntervalId); detectorObj.material.color.setHex(0xff5555); return; }
+                detectorObj.material.color.setHex(Date.now() % 300 < 150 ? 0xff8888 : 0xcc3333);
+            }, 200);
+            if (countdownIntervalId) clearInterval(countdownIntervalId);
+            let remaining = parseFloat(delaySlider.value);
+            document.getElementById('countdown-value').textContent = remaining;
+            countdownIntervalId = setInterval(() => {
+                remaining -= 1;
+                document.getElementById('countdown-value').textContent = remaining >= 0 ? remaining : 0;
+                if (remaining <= 0) {
+                    clearInterval(countdownIntervalId);
+                    countdownDiv.style.display = 'none';
+                    isAlarming = false;
+                    if (alarmIntervalId) clearInterval(alarmIntervalId);
+                    detectorObj.material.color.setHex(0xff5555);
+                    if (currentTargetFire && firePoints.includes(currentTargetFire)) {
+                        startSpraying(currentTargetFire);
+                    } else {
+                        const next = findNearestFire();
+                        if (next) startAlarm(next);
+                        else updateDetectorData();
+                    }
+                }
+            }, 1000);
+            addLogEntry(`${translations[currentLanguage].fireDetected} (${fire.position.x.toFixed(1)}, ${fire.position.z.toFixed(1)}) 距離=${dist.toFixed(1)}m, 模式${currentMode}${translations[currentLanguage].alarmActivated}`, "alarm");
+        }
+        
+        // 根據當前模式建立灑水目標點集 (C模式: 使用連續輔助點陣列)
+        function buildWaterTargetsForMode(fire) {
+            if (currentMode === "A" || currentMode === "C") {
+                const auxPoints = hiddenAuxPoints.filter(ap => ap.parentFire === fire);
+                let targets = [];
+                // 加入火點本體
+                targets.push({ pos: fire.position.clone().add(new THREE.Vector3(0, 0.45, 0)), isVisible: true, ref: fire });
+                for (let aux of auxPoints) {
+                    targets.push({ pos: aux.position.clone(), isVisible: false, ref: aux });
+                }
+                targets.sort((a,b) => a.pos.distanceTo(nozzle.position) - b.pos.distanceTo(nozzle.position));
+                return targets;
+            } else {
+                // B模式: 瞄準火點加隨機偏移
+                let targets = [];
+                for(let i=0; i<12; i++) {
+                    let offset = new THREE.Vector3((Math.random()-0.5)*0.8, Math.random()*0.6, (Math.random()-0.5)*0.8);
+                    targets.push({ pos: fire.position.clone().add(offset), isVisible: false, ref: fire });
+                }
+                targets.push({ pos: fire.position.clone().add(new THREE.Vector3(0,0.5,0)), isVisible: true, ref: fire });
+                return targets;
+            }
+        }
+        
+        function startSpraying(fire) {
+            if (!fire || !firePoints.includes(fire)) { const nf = findNearestFire(); if (nf) startAlarm(nf); return; }
+            isSpraying = true;
+            currentTargetFire = fire;
+            sprayStartTime = Date.now();
+            activeWaterTargets = buildWaterTargetsForMode(fire);
+            const dx = fire.position.x - nozzle.position.x;
+            const dz = fire.position.z - nozzle.position.z;
+            const dist = Math.sqrt(dx*dx + dz*dz);
+            addLogEntry(`${translations[currentLanguage].extinguishingFire} (${fire.position.x.toFixed(1)}, ${fire.position.z.toFixed(1)}) 模式${currentMode} 涵蓋目標點: ${activeWaterTargets.length}`, "extinguish");
+            updateDetectorData(translations[currentLanguage].extinguishing, `(${fire.position.x.toFixed(1)}, ${fire.position.z.toFixed(1)})`);
+            nozzle.rotation.y = Math.atan2(dz, dx);
+            nozzle.rotation.z = Math.PI/2;
+        }
+        
+        function calcVelocityToTarget(start, target) {
+            const dx = target.x - start.x, dz = target.z - start.z, dy = target.y - start.y;
+            const horiz = Math.sqrt(dx*dx + dz*dz);
+            const g = 0.012;
+            const time = Math.max(0.25, horiz * 0.045 + Math.sqrt(2 * Math.abs(dy) / g) * 0.7);
+            const vx = dx / time, vz = dz / time, vy = (dy + 0.5 * g * time * time) / time;
+            return new THREE.Vector3(vx, vy, vz);
+        }
+        
+        function generateSprayParticles() {
+            if (!isSpraying || activeWaterTargets.length === 0) return;
+            const particlesPerFrame = 14;
+            for (let i=0; i<particlesPerFrame; i++) {
+                let targetIdx = Math.floor(Math.random() * activeWaterTargets.length);
+                let targetPoint = activeWaterTargets[targetIdx].pos.clone();
+                targetPoint.x += (Math.random() - 0.5) * 0.6;
+                targetPoint.z += (Math.random() - 0.5) * 0.6;
+                targetPoint.y += Math.random() * 0.5;
+                const drop = new THREE.Mesh(waterDropGeo, waterMaterial.clone());
+                drop.position.copy(nozzle.position);
+                const vel = calcVelocityToTarget(nozzle.position, targetPoint);
+                vel.x += (Math.random() - 0.5) * 0.12;
+                vel.z += (Math.random() - 0.5) * 0.12;
+                drop.userData = { velocity: vel, gravity: -0.012, life: 100 + Math.random() * 40 };
+                scene.add(drop);
+                waterParticles.push(drop);
+            }
+        }
+        
+        // 模式切換 (保留火點並重建輔助點)
+        function switchMode(mode) {
+            if (currentMode === mode) return;
+            currentMode = mode;
+            // 清除所有輔助點
+            hiddenAuxPoints.forEach(ap => scene.remove(ap.mesh));
+            hiddenAuxPoints = [];
+            // 根據新模式重建所有火點的輔助點 (A/C模式需要)
+            if (currentMode !== "B") {
+                for (let fire of firePoints) {
+                    const segment = getWaterSegmentAndPointsByMode(fire, currentMode);
+                    hiddenAuxPoints.push(...segment.points);
+                }
+            }
+            updateModeUI();
+            if (firePoints.length > 0) {
+                const nearest = findNearestFire();
+                if (nearest) {
+                    const dx = nearest.position.x - nozzle.position.x, dz = nearest.position.z - nozzle.position.z;
+                    const dist = Math.sqrt(dx*dx+dz*dz);
+                    if(currentMode === 'A') {
+                        const zone = dist <= 23 ? "0~23m" : "23~40m";
+                        document.getElementById('range-display').innerHTML = `📏 灑水策略(A): ${zone} (火點距離 ${dist.toFixed(1)}m)`;
+                    } else if(currentMode === 'C') {
+                        document.getElementById('range-display').innerHTML = `📏 灑水策略(C): 全區0~36m連續 (火點距離 ${dist.toFixed(1)}m)`;
+                    } else {
+                        document.getElementById('range-display').innerHTML = `📏 灑水策略(B): 定點瞄準火點 (距離 ${dist.toFixed(1)}m)`;
+                    }
+                }
+            } else {
+                document.getElementById('range-display').innerHTML = `📏 灑水策略: ${mode==='A'?'A動態區段':(mode==='C'?'C全區連續':'B定點集中')}`;
+            }
+            addLogEntry( currentMode === "A" ? translations[currentLanguage].modeASwitch : (currentMode === "B" ? translations[currentLanguage].modeBSwitch : translations[currentLanguage].modeCSwitch), "normal");
+        }
+        
+        function updateModeUI() {
+            const t = translations[currentLanguage];
+            document.getElementById('current-mode-badge').innerHTML = currentMode === "A" ? "A模式 (動態區段)" : (currentMode === "B" ? "B模式 (定點集中)" : "C模式 (全區連續)");
+            document.getElementById('mode-specific-hint').innerHTML = currentMode === "A" ? "💧 A模式: 依火點距離自動選取0~23m或23~40m區間灑水" : (currentMode === "B" ? "💧 B模式: 直接瞄準火點中心集中噴射滅火" : "💧 C模式: 全範圍0~36m連續灑水，完整覆蓋");
+            document.getElementById('mode-desc-text').innerHTML = currentMode === "A" ? "📐 火點距離 ≤23m → 灑水0~23m | 距離>23m → 灑水23~40m" : (currentMode === "B" ? "🎯 火點距離任意 → 水柱集中於火點位置及其周邊，快速滅火" : "🌊 C模式: 0~36m全區連續放水，不切換區段，全面覆蓋");
+            document.getElementById('mode-a-btn').classList.toggle('active', currentMode === "A");
+            document.getElementById('mode-b-btn').classList.toggle('active', currentMode === "B");
+            document.getElementById('mode-c-btn').classList.toggle('active', currentMode === "C");
+        }
+        
+        // 事件綁定
+        document.getElementById('mode-a-btn').addEventListener('click', () => switchMode("A"));
+        document.getElementById('mode-b-btn').addEventListener('click', () => switchMode("B"));
+        document.getElementById('mode-c-btn').addEventListener('click', () => switchMode("C"));
+        document.getElementById('reset-btn').addEventListener('click', () => resetSystem());
+        document.getElementById('language-select').addEventListener('change', (e) => { currentLanguage = e.target.value; updateLanguage(); });
+        
+        const raycaster = new THREE.Raycaster();
+        window.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const mouse = new THREE.Vector2((e.clientX/renderer.domElement.clientWidth)*2-1, -(e.clientY/renderer.domElement.clientHeight)*2+1);
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(groundPlane);
+            if (intersects.length > 0) {
+                const point = intersects[0].point;
+                addFireAtPosition(point.x, point.z);
+            }
+        });
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            if (!isAlarming && !isSpraying && firePoints.length > 0 && !currentTargetFire) {
+                const nearest = findNearestFire();
+                if (nearest) startAlarm(nearest);
+            }
+            if (isSpraying && currentTargetFire) {
+                if (!firePoints.includes(currentTargetFire)) {
+                    isSpraying = false; activeWaterTargets = [];
+                    const next = findNearestFire();
+                    if (next) startAlarm(next);
+                    else updateDetectorData();
+                } 
+                else if (Date.now() - sprayStartTime >= SPRAY_DURATION) {
+                    const fireToRemove = currentTargetFire;
+                    removeFire(fireToRemove);
+                    document.getElementById('fire-count').innerHTML = translations[currentLanguage].fireCount + firePoints.length;
+                    addLogEntry(`${translations[currentLanguage].fireExtinguished} (${fireToRemove.position.x.toFixed(1)}, ${fireToRemove.position.z.toFixed(1)})`, "extinguish");
+                    isSpraying = false;
+                    activeWaterTargets = [];
+                    if (firePoints.length > 0) {
+                        const nextFire = findNearestFire();
+                        startAlarm(nextFire);
+                    } else {
+                        currentTargetFire = null;
+                        updateDetectorData();
+                        addLogEntry(translations[currentLanguage].allFiresExtinguished, "normal");
+                        nozzle.rotation.y = 0;
+                        document.getElementById('range-display').innerHTML = `📏 灑水策略: --`;
+                    }
+                } else {
+                    generateSprayParticles();
+                }
+            }
+            for (let i=waterParticles.length-1; i>=0; i--) {
+                const p = waterParticles[i];
+                p.position.x += p.userData.velocity.x;
+                p.position.y += p.userData.velocity.y;
+                p.position.z += p.userData.velocity.z;
+                p.userData.velocity.y += p.userData.gravity;
+                p.userData.life--;
+                if (p.userData.life <= 0 || p.position.y < -0.3 || p.position.y > 15) {
+                    scene.remove(p);
+                    waterParticles.splice(i,1);
+                }
+            }
+            firePoints.forEach(f => { f.material.emissiveIntensity = 0.6 + Math.sin(Date.now() * 0.012) * 0.4; });
+            renderer.render(scene, camera);
+        }
+        
+        updateLanguage();
+        addLogEntry(translations[currentLanguage].systemStart, "normal");
+        updateDetectorData();
+        animate();
+    </script>
+    <button onclick="window.location.href='index.html'" 
+        style="position: fixed; bottom: 20px; right: 20px; padding: 8px 18px; background: #2c5a7a; color: white; border: none; border-radius: 30px; cursor: pointer; z-index: 9999; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+        🏠 返回主選單
+    </button>
+</body>
+</html>
