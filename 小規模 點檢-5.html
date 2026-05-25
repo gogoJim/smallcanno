@@ -631,7 +631,9 @@
             margin-top: 10px;
         }
     </style>
-			    <!-- ========== 防護區塊：禁止右鍵 + 禁止 F12 開發者工具 ========== -->
+	
+	
+				    <!-- ========== 防護區塊：禁止右鍵 + 禁止 F12 開發者工具 ========== -->
     <script>
         (function() {
             // 1. 禁止右鍵選單 (contextmenu)
@@ -700,7 +702,6 @@
         })();
     </script>
     <!-- ========== 防護區塊結束 ========== -->
-	
 	
 </head>
 <body>
@@ -1329,58 +1330,149 @@ function renderFieldPanelTable() {
             <div class="info-card"><div class="info-card-title">🔧 設備數量</div><div class="info-row"><span>監視/滅火單元數量</span><span>${escapeHtml(currentData.unitCount) || '__________'}</span></div><div class="info-row"><span>中央控制盤數量</span><span>${escapeHtml(currentData.centralControlCount) || '__________'}</span></div><div class="info-row"><span>水槍安裝使用日期</span><span>${escapeHtml(currentData.installationDate) || '__________'}</span></div></div>
             <div class="info-card"><div class="info-card-title">💧 幫浦資訊</div><div class="info-row"><span>幫浦廠牌</span><span>${escapeHtml(currentData.pumpBrand) || '__________'}</span></div><div class="info-row"><span>型號</span><span>${escapeHtml(currentData.pumpModel) || '__________'}</span></div><div class="info-row"><span>揚程/水量</span><span>${escapeHtml(currentData.pumpHead) || '__________'} / ${escapeHtml(currentData.pumpCapacity) || '__________'}</span></div></div></div>
             <div class="summary-stats"><div class="stat-card"><div class="stat-number">${stats.totalItems}</div><div>總試驗項目</div></div><div class="stat-card"><div class="stat-number" style="color:#27ae60">${stats.passCount}</div><div>合格</div></div><div class="stat-card"><div class="stat-number" style="color:#e74c3c">${stats.failCount}</div><div>不合格</div></div><div class="stat-card"><div class="stat-number" style="color:#f39c12">${stats.pendingCount}</div><div>未測試</div></div></div>
-            <div class="section-title">二、試驗項目結果<br>1. 監視/滅火單元</div><div class="data-table-wrapper"><table class="data-table"><thead><tr><th>試驗項目</th><th>型名</th><th>設置場所</th><th>安裝高度</th><th>種別・容量等內容</th><th>結果</th></tr></thead><tbody>${currentData.monitorUnit.map(item => `<tr><td>${escapeHtml(item.testItem)}</td><td>${escapeHtml(item.model) || '__________'}</td><td>${escapeHtml(item.location) || '__________'}</td><td>${escapeHtml(item.height) || '__________'}</td><td>${escapeHtml(item.details).replace(/\n/g,'<br>')}</td><td><span class="result-${item.result === '合格' ? 'pass' : item.result === '不合格' ? 'fail' : 'not-tested'}">${item.result}</span></td></tr>`).join('')}</tbody></table></div>
-            <div class="section-title">2. 單元控制盤</div><div class="data-table-wrapper"><table class="data-table"><thead><tr><th>試驗項目</th><th>型名</th><th>設置場所</th><th>種別・容量等內容</th><th>結果</th></tr></thead><tbody>${currentData.controlPanel.map(item => `<tr><td>${escapeHtml(item.testItem)}</td><td>${escapeHtml(item.model) || '__________'}</td><td>${escapeHtml(item.location) || '__________'}</td><td>${escapeHtml(item.details).replace(/\n/g,'<br>')}</td><td><span class="result-${item.result === '合格' ? 'pass' : item.result === '不合格' ? 'fail' : 'not-tested'}">${item.result}</span></td></tr>`).join('')}</tbody></table></div>
-            <div class="section-title">3. 中央控制盤</div><div class="data-table-wrapper"><table class="data-table"><thead><tr><th>試驗項目</th><th>型名</th><th>設置場所</th><th>種別・容量等內容</th><th>結果</th></tr></thead><tbody>${currentData.centralControl.map(item => `<tr><td>${escapeHtml(item.testItem)}</td><td>${escapeHtml(item.model) || '__________'}</td><td>${escapeHtml(item.location) || '__________'}</td><td>${escapeHtml(item.details).replace(/\n/g,'<br>')}</td><td><span class="result-${item.result === '合格' ? 'pass' : item.result === '不合格' ? 'fail' : 'not-tested'}">${item.result}</span></td></tr>`).join('')}</tbody></table></div>
-			            <!-- 4. 現場操作盤 -->
-            <div class="section-title">4. 現場操作盤</div>
-            <div class="data-table-wrapper">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th width="15%">試驗項目</th>
-                            <th width="12%">型名</th>
-                            <th width="18%">設置場所</th>
-                            <th width="40%">種別・容量等內容</th>
-                            <th width="15%">結果</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${currentData.fieldPanel.map(item => `
-                        <tr>
-                            <td>${escapeHtml(item.testItem)}</td>
-                            <td>${escapeHtml(item.model) || '__________'}</td>
-                            <td>${escapeHtml(item.location) || '__________'}</td>
-                            <td>${escapeHtml(item.details).replace(/\n/g,'<br>')}</td>
-                            <td><span class="result-${item.result === '合格' ? 'pass' : item.result === '不合格' ? 'fail' : 'not-tested'}">${item.result}</span></td>
-                        </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
 
-            <!-- 5. 綜合試驗 -->
-            <div class="section-title">5. 綜合試驗</div>
-            <div class="data-table-wrapper">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th width="20%">試驗項目</th>
-                            <th width="55%">種別・容量等內容</th>
-                            <th width="25%">結果</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${currentData.comprehensive.map(item => `
-                        <tr>
-                            <td>${escapeHtml(item.testItem)}</td>
-                            <td>${escapeHtml(item.details).replace(/\n/g,'<br>')}</td>
-                            <td><span class="result-${item.result === '合格' ? 'pass' : item.result === '不合格' ? 'fail' : 'not-tested'}">${item.result}</span></td>
-                        </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
+<div class="section-title">二、試驗項目結果<br>1. 監視/滅火單元</div>
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>試驗項目</th>
+                <th>型名</th>
+                <th>設置場所</th>
+                <th>安裝高度</th>
+                <th>種別・容量等內容</th>
+                <th>結果</th>
+                <th>備註</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${currentData.monitorUnit.map(item => `
+            <tr>
+                <td>${escapeHtml(item.testItem)}</td>
+                <td>${escapeHtml(item.model) || '__________'}</td>
+                <td>${escapeHtml(item.location) || '__________'}</td>
+                <td>${escapeHtml(item.height) || '__________'}</td>
+                <td>${escapeHtml(item.details).replace(/\n/g,'<br>')}</td>
+                <td><span class="result-${item.result === '合格' ? 'pass' : item.result === '不合格' ? 'fail' : 'not-tested'}">${item.result}</span></td>
+                <td>${escapeHtml(item.remark) || ''}</td>
+            </tr>
+            `).join('')}
+        </tbody>
+    </table>
+</div>
+
+<div class="section-title">2. 單元控制盤</div>
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>試驗項目</th>
+                <th>型名</th>
+                <th>設置場所</th>
+                <th>種別・容量等內容</th>
+                <th>結果</th>
+                <th>備註</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${currentData.controlPanel.map(item => `
+            <tr>
+                <td>${escapeHtml(item.testItem)}</td>
+                <td>${escapeHtml(item.model) || '__________'}</td>
+                <td>${escapeHtml(item.location) || '__________'}</td>
+                <td>${escapeHtml(item.details).replace(/\n/g,'<br>')}</td>
+                <td><span class="result-${item.result === '合格' ? 'pass' : item.result === '不合格' ? 'fail' : 'not-tested'}">${item.result}</span></td>
+                <td>${escapeHtml(item.remark) || ''}</td>
+            </tr>
+            `).join('')}
+        </tbody>
+    </table>
+</div>
+
+
+<div class="section-title">3. 中央控制盤</div>
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>試驗項目</th>
+                <th>型名</th>
+                <th>設置場所</th>
+                <th>種別・容量等內容</th>
+                <th>結果</th>
+                <th>備註</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${currentData.centralControl.map(item => `
+            <tr>
+                <td>${escapeHtml(item.testItem)}</td>
+                <td>${escapeHtml(item.model) || '__________'}</td>
+                <td>${escapeHtml(item.location) || '__________'}</td>
+                <td>${escapeHtml(item.details).replace(/\n/g,'<br>')}</td>
+                <td><span class="result-${item.result === '合格' ? 'pass' : item.result === '不合格' ? 'fail' : 'not-tested'}">${item.result}</span></td>
+                <td>${escapeHtml(item.remark) || ''}</td>
+            </tr>
+            `).join('')}
+        </tbody>
+    </table>
+</div>
+
+<!-- 4. 現場操作盤 -->
+<div class="section-title">4. 現場操作盤</div>
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th width="15%">試驗項目</th>
+                <th width="12%">型名</th>
+                <th width="18%">設置場所</th>
+                <th width="35%">種別・容量等內容</th>
+                <th width="10%">結果</th>
+                <th width="10%">備註</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${currentData.fieldPanel.map(item => `
+            <tr>
+                <td>${escapeHtml(item.testItem)}</td>
+                <td>${escapeHtml(item.model) || '__________'}</td>
+                <td>${escapeHtml(item.location) || '__________'}</td>
+                <td>${escapeHtml(item.details).replace(/\n/g,'<br>')}</td>
+                <td><span class="result-${item.result === '合格' ? 'pass' : item.result === '不合格' ? 'fail' : 'not-tested'}">${item.result}</span></td>
+                <td>${escapeHtml(item.remark) || ''}</td>
+            </tr>
+            `).join('')}
+        </tbody>
+    <table>
+</div>
+
+
+			<!-- 5. 綜合試驗 -->
+<div class="section-title">5. 綜合試驗</div>
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th width="20%">試驗項目</th>
+                <th width="50%">種別・容量等內容</th>
+                <th width="15%">結果</th>
+                <th width="15%">備註</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${currentData.comprehensive.map(item => `
+            <tr>
+                <td>${escapeHtml(item.testItem)}</td>
+                <td>${escapeHtml(item.details).replace(/\n/g,'<br>')}</td>
+                <td><span class="result-${item.result === '合格' ? 'pass' : item.result === '不合格' ? 'fail' : 'not-tested'}">${item.result}</span></td>
+                <td>${escapeHtml(item.remark) || ''}</td>
+            </tr>
+            `).join('')}
+        </tbody>
+    </table>
+</div>
+
 
 
 			${stats.hasFailure ? `<div class="failure-title">三、不合格項目改善建議</div>
