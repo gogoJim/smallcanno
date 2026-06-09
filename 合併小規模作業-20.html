@@ -542,78 +542,6 @@
         
         .error { color: red; font-size: 14px; margin-top: 5px; }
     </style>
-					    <!-- ========== 防護區塊：禁止右鍵 + 禁止 F12 開發者工具 ========== -->
-    <script>
-        (function() {
-            // 1. 禁止右鍵選單 (contextmenu)
-            document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                return false;
-            });
-            
-            // 2. 防堵開發者工具快捷鍵
-            function blockDevTools(e) {
-                // F12 鍵
-                if (e.key === 'F12') {
-                    e.preventDefault();
-                    return false;
-                }
-                // Ctrl+Shift+I (Windows/Linux) 或 Cmd+Option+I (Mac)
-                if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
-                    e.preventDefault();
-                    return false;
-                }
-                // Ctrl+Shift+J (Windows/Linux) 或 Cmd+Option+J (Mac)
-                if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
-                    e.preventDefault();
-                    return false;
-                }
-                // Ctrl+U (檢視原始碼)
-                if ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u')) {
-                    e.preventDefault();
-                    return false;
-                }
-                // Ctrl+S (儲存頁面)
-                if ((e.ctrlKey || e.metaKey) && (e.key === 'S' || e.key === 's')) {
-                    e.preventDefault();
-                    return false;
-                }
-                // Ctrl+Shift+C (開啟選取元素)
-                if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
-                    e.preventDefault();
-                    return false;
-                }
-                return true;
-            }
-            
-            document.addEventListener('keydown', blockDevTools);
-            
-            // 3. 偵測開發者工具是否開啟 (透過console被呼叫)
-            let devtoolsOpen = false;
-            const element = new Image();
-            Object.defineProperty(element, 'id', {
-                get: function() {
-                    devtoolsOpen = true;
-                    console.warn('偵測到開發者工具');
-                    return '';
-                }
-            });
-            setInterval(function() {
-                devtoolsOpen = false;
-                console.log(element);
-                console.clear();
-                if (devtoolsOpen) {
-                    console.clear();
-                    // 可選：顯示警告或重新導向
-                    // alert('請關閉開發者工具後繼續使用');
-                }
-            }, 1000);
-        })();
-    </script>
-    <!-- ========== 防護區塊結束 ========== -->
-	
-	
-	
 </head>
 <body>
     <div class="main-container">
@@ -621,14 +549,15 @@
             <div class="sidebar-header">
                 <h3>功能選單</h3>
             </div>
-            <ul class="sidebar-menu">
-                <li><button class="sidebar-button active" data-tab="tab-settings">⚙️ 設定步驟</button></li>
-                <li><button class="sidebar-button" data-tab="tab-height-distance">📐 高度與距離分析</button></li>
-                <li><button class="sidebar-button" data-tab="tab-calibration">📊 水鎗校正紀錄</button></li>
-                <li><button class="sidebar-button" data-tab="tab-project28-frame">📋 28項目設定表</button></li>
-                <li><button class="sidebar-button" data-tab="tab-event-list-frame">📋 事件列表</button></li>
-                <li><button class="sidebar-button" data-tab="tab-lcd-frame">📱 LCD視窗訊息</button></li>
-            </ul>
+		<ul class="sidebar-menu">
+			<li><button class="sidebar-button active" data-tab="tab-settings">⚙️ 設定步驟</button></li>
+			<li><button class="sidebar-button" data-tab="tab-height-distance">📐 高度與距離分析</button></li>
+			<li><button class="sidebar-button" data-tab="tab-calibration">📊 水鎗校正紀錄</button></li>
+			<li><button class="sidebar-button" data-tab="tab-vertical-step">小規模Ver2</button></li>
+			<li><button class="sidebar-button" data-tab="tab-project28-frame">📋 28項目設定表</button></li>
+			<li><button class="sidebar-button" data-tab="tab-event-list-frame">📋 事件列表</button></li>
+			<li><button class="sidebar-button" data-tab="tab-lcd-frame">📱 LCD視窗訊息</button></li>
+		</ul>
         </div>
         
         <div class="main-content">
@@ -818,6 +747,14 @@
                     <iframe id="lcdIframe" src="LCD字.html"></iframe>
                 </div>
             </div>
+			
+			<div id="tab-vertical-step" class="tab-content">
+				<h2>⭐ 小規模放水銃Ⅱ 垂直ステップ計算書</h2>
+				<div class="iframe-container" style="height: 85vh;">
+				<iframe id="verticalStepIframe" src="小規模Ver2-2.html" style="width:100%; height:100%; border:none;"></iframe>
+				</div>
+			</div>
+			
         </div>
     </div>
     
@@ -1959,6 +1896,10 @@ function updateBaseDistanceNoteForRow(row, rowData) {
                 const iframe = document.getElementById('lcdIframe');
                 if (iframe && !iframe.src) iframe.src = 'LCD字.html';
             }
+			if (tabId === 'tab-vertical-step') {
+			const iframe = document.getElementById('verticalStepIframe');
+			if (iframe && !iframe.src) iframe.src = '小規模Ver2-2.html';
+			}
         }
         
         function switchSubtab(subtabId) {
