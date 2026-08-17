@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>3D 掃描定位 · Jim 2026/8/14</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', 'PingFang TC', sans-serif; }
+        #info {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            color: #fff; background: rgba(10, 15, 30, 0.7); backdrop-filter: blur(6px);
+            padding: 8px 24px; border-radius: 40px;
+            border: 1px solid rgba(100, 180, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.5); z-index: 100;
+            font-size: 14px; letter-spacing: 1px; white-space: nowrap; pointer-events: none;
+        }
+        #info span { color: #66ddff; font-weight: bold; }
+        #status {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            color: #aac; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
+            padding: 8px 24px; border-radius: 30px; border: 1px solid #4488ff55;
+            font-size: 14px; z-index: 100; pointer-events: none;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00ff88; box-shadow: 0 0 15px #00ff88aa; animation: pulse-dot 1.2s infinite; }
+        @keyframes pulse-dot { 0% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0.3; transform: scale(0.8); } }
+        #controls {
+            position: absolute; bottom: 100px; right: 30px;
+            background: rgba(10, 20, 40, 0.8); backdrop-filter: blur(8px);
+            padding: 18px 22px; border-radius: 16px;
+            border: 1px solid rgba(100, 180, 255, 0.25);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6); z-index: 200;
+            color: #dde; min-width: 170px; user-select: none;
+        }
+        #controls label { display: block; font-size: 13px; letter-spacing: 0.5px; margin-bottom: 4px; color: #aac; }
+        #controls .value { float: right; color: #88ddff; font-weight: bold; }
+        #controls input[type="range"] { width: 100%; margin: 4px 0 8px; -webkit-appearance: none; background: transparent; }
+        #controls input[type="range"]:focus { outline: none; }
+        #controls input[type="range"]::-webkit-slider-runnable-track { height: 4px; background: #2a3a5a; border-radius: 4px; }
+        #controls input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #66ccff; cursor: pointer; margin-top: -6px; box-shadow: 0 0 12px #66ccff88; border: 2px solid #aaddff; }
+        #controls input[type="range"]::-moz-range-track { height: 4px; background: #2a3a5a; border-radius: 4px; }
+        #controls input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #66ccff; cursor: pointer; border: 2px solid #aaddff; }
+        #controls .hint { font-size: 11px; color: #667; margin-top: 6px; text-align: center; border-top: 1px solid #2a3a5a; padding-top: 6px; }
+        .control-group { margin-bottom: 12px; }
+        .control-group:last-of-type { margin-bottom: 0; }
+        #target-info {
+            position: absolute; bottom: 100px; left: 30px;
+            background: rgba(10, 20, 40, 0.85); backdrop-filter: blur(8px);
+            padding: 14px 20px; border-radius: 16px;
+            border: 1px solid #66ddff88;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6); z-index: 150;
+            color: #dde; min-width: 210px; font-size: 13px; line-height: 1.6;
+            pointer-events: none; transition: opacity 0.3s;
+        }
+        #target-info .title { color: #88ddff; font-weight: bold; margin-bottom: 4px; letter-spacing: 0.5px; }
+        #target-info .data { color: #fff; font-family: monospace; }
+        #target-info .section-title { color: #88ddff; font-size: 12px; margin-top: 4px; border-top: 1px solid #4488ff55; padding-top: 4px; }
+        #target-info .warning { color: #ffaa66; font-size: 12px; border-top: 1px solid #ff664455; padding-top: 4px; margin-top: 4px; }
+        @media (max-width: 600px) {
+            #info { font-size: 12px; padding: 6px 16px; white-space: normal; }
+            #status { font-size: 12px; padding: 6px 16px; }
+            #controls { bottom: 80px; right: 15px; padding: 14px 16px; min-width: 120px; }
+            #target-info { bottom: 80px; left: 15px; padding: 10px 14px; min-width: 150px; font-size: 12px; }
+        }
+        #reset-btn, #clear-btn, #debug-status {
+            position: absolute; right: 30px; background: rgba(10, 20, 40, 0.7); backdrop-filter: blur(6px);
+            color: #aac; border: 1px solid #4488ff55; padding: 6px 16px; border-radius: 30px;
+            cursor: pointer; font-size: 13px; z-index: 200; transition: 0.2s; font-family: inherit;
+        }
+        #reset-btn { top: 80px; }
+        #reset-btn:hover { background: #4488ff33; border-color: #66ccff; color: #fff; }
+        #clear-btn { top: 120px; border-color: #ff664455; }
+        #clear-btn:hover { background: #ff442233; border-color: #ff6644; color: #fff; }
+        #debug-status { top: 160px; font-size: 12px; font-family: monospace; cursor: default; pointer-events: none; }
+        #timer-display {
+            position: absolute; top: 80px; left: 30px;
+            background: rgba(10, 20, 40, 0.85); backdrop-filter: blur(8px);
+            color: #66ddff; border: 1px solid #66ddff55;
+            padding: 8px 20px; border-radius: 30px;
+            font-size: 18px; z-index: 200;
+            font-family: 'Courier New', monospace; font-weight: bold;
+            letter-spacing: 1px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        #timer-display .label { color: #8899bb; font-size: 13px; font-weight: normal; }
+        #timer-display .time { color: #88ddff; }
+        #timer-display .cycle { color: #ffaa66; font-size: 14px; margin-left: 12px; }
+
+        #countdown-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; justify-content: center; align-items: center;
+            z-index: 9999; pointer-events: none;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        #countdown-number { font-size: 150px; font-weight: bold; color: #ffaa44; text-shadow: 0 0 40px #ff6600, 0 0 80px #ff4400, 0 0 120px #ff2200; font-family: 'Arial Black', sans-serif; animation: countdown-pulse 0.8s ease-in-out; }
+        @keyframes countdown-pulse { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        #countdown-label { position: absolute; bottom: 30%; font-size: 30px; color: #88ddff; text-shadow: 0 0 20px #4488ff; font-family: 'Segoe UI', sans-serif; letter-spacing: 3px; opacity: 0.8; }
+        #countdown-sub { position: absolute; bottom: 22%; font-size: 18px; color: #8899bb; letter-spacing: 2px; opacity: 0.6; }
+
+        #water-status {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 20, 40, 0.92);
+            backdrop-filter: blur(12px);
+            color: #ffaa66;
+            border: 2px solid #ffaa66aa;
+            padding: 12px 28px;
+            border-radius: 16px;
+            font-size: 18px;
+            z-index: 300;
+            font-family: 'Segoe UI', 'PingFang TC', sans-serif;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.8), 0 0 60px rgba(255,170,102,0.15);
+            display: none;
+            text-align: center;
+            pointer-events: none;
+            min-width: 200px;
+            letter-spacing: 0.5px;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(255,170,102,0.3);
+        }
+        #water-status .label {
+            color: #8899bb;
+            font-size: 14px;
+            font-weight: normal;
+            display: block;
+            margin-bottom: 4px;
+        }
+        #water-status .mode-badge {
+            background: #2a4a6a;
+            border-radius: 16px;
+            padding: 2px 12px;
+            font-size: 12px;
+            display: inline-block;
+            margin-top: 4px;
+            color: #88ddff;
+            font-weight: normal;
+        }
+        #water-status .status-text {
+            font-size: 22px;
+            color: #ffcc88;
+        }
+        @media (max-width: 600px) {
+            #water-status {
+                font-size: 14px;
+                padding: 10px 18px;
+                min-width: 150px;
+                top: 28%;
+            }
+            #water-status .status-text {
+                font-size: 18px;
+            }
+            #water-status .label {
+                font-size: 12px;
+            }
+        }
+    </style>
+	
+		    <!-- ========== 防護區塊：禁止右鍵 + 禁止 F12 開發者工具 ========== -->
+    <script>
+        (function() {
+            // 1. 禁止右鍵選單 (contextmenu)
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            // 2. 防堵開發者工具快捷鍵
+            function blockDevTools(e) {
+                // F12 鍵
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+Shift+I (Windows/Linux) 或 Cmd+Option+I (Mac)
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+Shift+J (Windows/Linux) 或 Cmd+Option+J (Mac)
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+U (檢視原始碼)
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u')) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+S (儲存頁面)
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'S' || e.key === 's')) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+Shift+C (開啟選取元素)
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+                    e.preventDefault();
+                    return false;
+                }
+                return true;
+            }
+            
+            document.addEventListener('keydown', blockDevTools);
+            
+            // 3. 偵測開發者工具是否開啟 (透過console被呼叫)
+            let devtoolsOpen = false;
+            const element = new Image();
+            Object.defineProperty(element, 'id', {
+                get: function() {
+                    devtoolsOpen = true;
+                    console.warn('偵測到開發者工具');
+                    return '';
+                }
+            });
+            setInterval(function() {
+                devtoolsOpen = false;
+                console.log(element);
+                console.clear();
+                if (devtoolsOpen) {
+                    console.clear();
+                    // 可選：顯示警告或重新導向
+                    // alert('請關閉開發者工具後繼續使用');
+                }
+            }, 1000);
+        })();
+    </script>
+    <!-- ========== 防護區塊結束 ========== -->	
+	
+	
+	
+	
+	
+	
+</head>
+<body>
+    <div id="info">📡 <span>模擬小規模水槍</span> · 掃描 → 確認 → 定位 → 放水 Jim/2026/8 Ver. 11.5</div>
+    
+    <div id="timer-display">
+        <span class="label">⏱ 掃描時間</span>
+        <span class="time" id="timerValue">0.0</span><span class="label">s</span>
+        <span class="cycle" id="cycleCount">/ 17.0s</span>
+    </div>
+
+    <div id="water-status">
+        <span class="label">💧 狀態</span>
+        <span class="status-text" id="waterStateText">掃描中...</span>
+        <span class="mode-badge">HOCHIKI 放水模式</span>
+    </div>
+
+    <div id="status">
+        <span class="dot"></span>
+        <span>掃描中 · 累積點數 <span id="pointCount">0</span></span>
+    </div>
+
+    <div id="controls">
+        <div class="control-group">
+            <label>鏡頭高度 <span class="value" id="heightDisplay">4.0</span> m</label>
+            <input type="range" id="heightSlider" min="4" max="15" step="0.1" value="4.0">
+        </div>
+        <div class="control-group">
+            <label>掃描速度 <span class="value" id="speedDisplay">1.0</span> x</label>
+            <input type="range" id="speedSlider" min="0.1" max="5.0" step="0.1" value="1.0">
+        </div>
+        <div class="control-group">
+            <label>定位後等待 <span class="value" id="waitDisplay">10</span> s</label>
+            <input type="range" id="waitSlider" min="0" max="60" step="1" value="10">
+        </div>
+        <div class="hint">🖱 右鍵放球 · 拖曳視角 · 滾輪縮放</div>
+    </div>
+
+    <div id="target-info" style="opacity:0;">
+        <div class="title">🎯 目標球資訊</div>
+        <div class="data">座標: (<span id="coordX">0.00</span>, <span id="coordZ">0.00</span>)</div>
+        <div class="data">距離原點: <span id="distOrigin">0.00</span> m</div>
+        <div class="data">水平角: <span id="angleH">0.00</span>°</div>
+        <div class="data">垂直角: <span id="angleV">0.00</span>°</div>
+        <div class="section-title">📷 鏡頭資訊</div>
+        <div class="data" style="font-size:12px;">鏡頭高度: <span id="lensHeight">0.00</span> m</div>
+        <div class="data" style="font-size:12px;">鏡頭水平角: <span id="lensAngleH">0.00</span>°</div>
+        <div class="data" style="font-size:12px;">鏡頭垂直擺動: <span id="lensAngleV">0.00</span>°</div>
+        <div class="data" style="font-size:12px;">鏡頭→目標距離: <span id="distToTarget">0.00</span> m</div>
+        <div class="warning">⚡ 掃描已暫停</div>
+    </div>
+
+    <button id="reset-btn">🔄 繼續掃描</button>
+    <button id="clear-btn">🗑️ 清除目標球</button>
+    <div id="debug-status">🔍 掃描狀態: 運行中</div>
+
+    <div id="countdown-overlay">
+        <div id="countdown-number">3</div>
+        <div id="countdown-label">⚡ 目標確認</div>
+        <div id="countdown-sub">即將開始定位</div>
+    </div>
+
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.128.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/" } }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- DOM ---
+        const countdownOverlay = document.getElementById('countdown-overlay');
+        const countdownNumber = document.getElementById('countdown-number');
+        const countdownLabel = document.getElementById('countdown-label');
+        const waterStateText = document.getElementById('waterStateText');
+        const waterStatusDiv = document.getElementById('water-status');
+
+        // --- 場景 ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0e1a);
+        scene.fog = new THREE.FogExp2(0x0a0e1a, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(8, 6, 12);
+        camera.lookAt(0, 3, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 3, 0);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.minDistance = 2;
+        controls.maxDistance = 60;
+        controls.update();
+
+        // --- 燈光 ---
+        const ambient = new THREE.AmbientLight(0x446688, 0.5);
+        scene.add(ambient);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        dirLight.position.set(8, 15, 10);
+        scene.add(dirLight);
+        const fillLight = new THREE.DirectionalLight(0x4488ff, 0.3);
+        fillLight.position.set(-6, 4, -8);
+        scene.add(fillLight);
+        const backLight = new THREE.DirectionalLight(0xff8844, 0.2);
+        backLight.position.set(-3, 2, 10);
+        scene.add(backLight);
+
+        // --- 地面 ---
+        const gridHelper = new THREE.GridHelper(80, 40, 0x66aaff, 0x335588);
+        gridHelper.position.y = 0;
+        scene.add(gridHelper);
+
+        const groundDisc = new THREE.Mesh(
+            new THREE.CircleGeometry(40, 64),
+            new THREE.MeshBasicMaterial({ color: 0x1a2a4a, transparent: true, opacity: 0.2, side: THREE.DoubleSide })
+        );
+        groundDisc.rotation.x = -Math.PI / 2;
+        groundDisc.position.y = 0.01;
+        scene.add(groundDisc);
+
+        const refPointsMat = new THREE.PointsMaterial({ color: 0x4488aa, size: 0.1, transparent: true, opacity: 0.3, sizeAttenuation: true });
+        const refPositions = [];
+        for (let i = 0; i < 200; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const radius = 10 + Math.random() * 25;
+            refPositions.push(Math.cos(angle) * radius, Math.random() * 0.5, Math.sin(angle) * radius);
+        }
+        const refGeo = new THREE.BufferGeometry();
+        refGeo.setAttribute('position', new THREE.Float32BufferAttribute(refPositions, 3));
+        scene.add(new THREE.Points(refGeo, refPointsMat));
+
+        // --- 掃描器設備 --- (保持原本的掃描器結構)
+        const scannerGroup = new THREE.Group();
+        scannerGroup.position.set(0, 0, 0);
+        const baseMat = new THREE.MeshStandardMaterial({ color: 0x445566, roughness: 0.4, metalness: 0.5 });
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 0.1, 16), baseMat);
+        base.position.y = 0.05;
+        scannerGroup.add(base);
+
+        const platformGroup = new THREE.Group();
+        platformGroup.position.y = 0.1;
+        const platMat = new THREE.MeshStandardMaterial({ color: 0x77aacc, roughness: 0.3, metalness: 0.7 });
+        const plat = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.06, 20), platMat);
+        plat.position.y = 0.03;
+        platformGroup.add(plat);
+
+        const tiltGroup = new THREE.Group();
+        tiltGroup.position.y = 0.08;
+        const armMat = new THREE.MeshStandardMaterial({ color: 0x88aadd, roughness: 0.2, metalness: 0.5 });
+        const arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.25, 0.04), armMat);
+        arm.position.y = 0.18;
+        tiltGroup.add(arm);
+
+        const headGroup = new THREE.Group();
+        headGroup.position.y = 0.40;
+        // ... 鏡頭細節 (省略，保持與原本相同)
+        const lensBaseMat = new THREE.MeshStandardMaterial({ color: 0x99bbdd, roughness: 0.2, metalness: 0.7, emissive: new THREE.Color(0x224466), emissiveIntensity: 0.1 });
+        const lensBase = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.08, 16), lensBaseMat);
+        lensBase.rotation.x = Math.PI / 2;
+        lensBase.position.set(0, 0, 0);
+        headGroup.add(lensBase);
+
+        const lensBodyMat = new THREE.MeshStandardMaterial({ color: 0xccddff, roughness: 0.15, metalness: 0.85, emissive: new THREE.Color(0x335577), emissiveIntensity: 0.1 });
+        const lensBody = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.04, 20), lensBodyMat);
+        lensBody.rotation.x = Math.PI / 2;
+        lensBody.position.set(0, 0, 0.06);
+        headGroup.add(lensBody);
+
+        const lensRingMat = new THREE.MeshStandardMaterial({ color: 0x88ccff, roughness: 0.1, metalness: 0.3, emissive: new THREE.Color(0x0066cc), emissiveIntensity: 0.2, transparent: true, opacity: 0.6 });
+        const lensRing = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.015, 8, 20), lensRingMat);
+        lensRing.rotation.x = Math.PI / 2;
+        lensRing.position.set(0, 0, 0.08);
+        headGroup.add(lensRing);
+
+        const mirrorMat = new THREE.MeshStandardMaterial({ color: 0x88ddff, roughness: 0.05, metalness: 0.9, emissive: new THREE.Color(0x004488), emissiveIntensity: 0.3 });
+        const mirror = new THREE.Mesh(new THREE.CircleGeometry(0.055, 16), mirrorMat);
+        mirror.rotation.x = -Math.PI / 2;
+        mirror.position.set(0, 0, 0.08);
+        headGroup.add(mirror);
+
+        const emitMat = new THREE.MeshStandardMaterial({ color: 0xff6633, emissive: new THREE.Color(0xff4400), emissiveIntensity: 0.8 });
+        const emitPoint = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 6), emitMat);
+        emitPoint.position.set(0.035, 0.035, 0.10);
+        headGroup.add(emitPoint);
+
+        const recvMat2 = new THREE.MeshStandardMaterial({ color: 0x33aaff, emissive: new THREE.Color(0x0066ff), emissiveIntensity: 0.6 });
+        const recvPoint = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 6), recvMat2);
+        recvPoint.position.set(-0.035, -0.035, 0.10);
+        headGroup.add(recvPoint);
+
+        tiltGroup.add(headGroup);
+        platformGroup.add(tiltGroup);
+        scannerGroup.add(platformGroup);
+        scene.add(scannerGroup);
+
+        // --- 三角形指標 ---
+        const LASER_START_ANGLE = 1.658;
+        const triGroup = new THREE.Group();
+        triGroup.position.set(0, 3.8, 0);
+        triGroup.rotation.y = LASER_START_ANGLE;
+        scene.add(triGroup);
+
+        const shape = new THREE.Shape();
+        const tipAngle = 25 * Math.PI / 180;
+        const h = 0.8;
+        const halfBase = h * Math.tan(tipAngle / 2);
+        shape.moveTo(0, h/2);
+        shape.lineTo(-halfBase, -h/2);
+        shape.lineTo(halfBase, -h/2);
+        shape.closePath();
+
+        const triMat = new THREE.MeshStandardMaterial({ color: 0xffaa44, emissive: 0xff5500, emissiveIntensity: 0.3, side: THREE.DoubleSide, roughness: 0.3, metalness: 0.1 });
+        const triMesh = new THREE.Mesh(new THREE.ShapeGeometry(shape), triMat);
+        triMesh.rotation.x = -Math.PI / 2;
+        triMesh.position.y = 0.02;
+        triGroup.add(triMesh);
+
+        const edges = new THREE.EdgesGeometry(new THREE.ShapeGeometry(shape));
+        const wireframe = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffaa44 }));
+        wireframe.rotation.x = -Math.PI / 2;
+        wireframe.position.y = 0.025;
+        triGroup.add(wireframe);
+
+        const tipMarker = new THREE.Mesh(
+            new THREE.SphereGeometry(0.09, 16, 16),
+            new THREE.MeshStandardMaterial({ color: 0xff2200, emissive: 0xff0000, emissiveIntensity: 0.8 })
+        );
+        tipMarker.position.set(0, 0.02, h/2);
+        triGroup.add(tipMarker);
+        const glowMat2 = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending });
+        const glowMesh = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12), glowMat2);
+        glowMesh.position.copy(tipMarker.position);
+        triGroup.add(glowMesh);
+
+        let targetTriAngle = LASER_START_ANGLE;
+        let currentTriAngle = LASER_START_ANGLE;
+        let isTriRotating = false;
+        const TRI_ROTATION_SPEED = 0.005;
+
+        // --- 倒數計時 ---
+        let isCountdownActive = false;
+        let countdownValue = 3;
+        let countdownTimer = null;
+
+        function showCountdown(callback) {
+            if (isCountdownActive) return;
+            isCountdownActive = true;
+            countdownValue = 3;
+            countdownOverlay.style.display = 'flex';
+            countdownLabel.textContent = '⚡ 目標確認';
+            countdownNumber.textContent = countdownValue;
+            countdownNumber.style.animation = 'none';
+            void countdownNumber.offsetWidth;
+            countdownNumber.style.animation = 'countdown-pulse 0.8s ease-in-out';
+            
+            if (countdownTimer) clearInterval(countdownTimer);
+            countdownTimer = setInterval(() => {
+                countdownValue--;
+                if (countdownValue > 0) {
+                    countdownNumber.textContent = countdownValue;
+                    countdownNumber.style.animation = 'none';
+                    void countdownNumber.offsetWidth;
+                    countdownNumber.style.animation = 'countdown-pulse 0.8s ease-in-out';
+                } else {
+                    clearInterval(countdownTimer);
+                    countdownTimer = null;
+                    countdownNumber.textContent = '▶';
+                    countdownNumber.style.animation = 'none';
+                    void countdownNumber.offsetWidth;
+                    countdownNumber.style.animation = 'countdown-pulse 0.5s ease-in-out';
+                    setTimeout(() => {
+                        countdownOverlay.style.display = 'none';
+                        isCountdownActive = false;
+                        if (callback) callback();
+                    }, 500);
+                }
+            }, 1000);
+        }
+
+        // --- 三角形轉向 ---
+        function updateTriangle() {
+            if (isTriRotating) {
+                let diff = targetTriAngle - currentTriAngle;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                const step = Math.sign(diff) * Math.min(Math.abs(diff), TRI_ROTATION_SPEED);
+                currentTriAngle += step;
+                if (Math.abs(diff) < 0.005) { 
+                    currentTriAngle = targetTriAngle; 
+                    isTriRotating = false;
+                    if (window._pendingWaitCallback) {
+                        const cb = window._pendingWaitCallback;
+                        window._pendingWaitCallback = null;
+                        cb();
+                    }
+                }
+                triGroup.rotation.y = currentTriAngle;
+            }
+        }
+
+        function startTriangleRotation(targetAngle, onComplete) {
+            targetTriAngle = targetAngle;
+            isTriRotating = true;
+            currentTriAngle = triGroup.rotation.y;
+            window._pendingWaitCallback = onComplete;
+            waterStateText.textContent = '🔄 噴頭定位中...';
+        }
+
+        function resetTriangleToStart() {
+            isTriRotating = false;
+            currentTriAngle = LASER_START_ANGLE;
+            targetTriAngle = LASER_START_ANGLE;
+            triGroup.rotation.y = LASER_START_ANGLE;
+            window._pendingWaitCallback = null;
+            countdownOverlay.style.display = 'none';
+            isCountdownActive = false;
+            if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+        }
+
+        // --- 原本的雷射光束 (地面掃描用) ---
+        const beamGroup = new THREE.Group();
+        const MAX_BEAM_LENGTH = 40;
+        const outerGlowMat = new THREE.MeshBasicMaterial({ color: 0xff2200, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false });
+        const outerGlow = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.15, MAX_BEAM_LENGTH, 8), outerGlowMat);
+        outerGlow.rotation.x = Math.PI / 2;
+        outerGlow.position.z = MAX_BEAM_LENGTH / 2;
+        beamGroup.add(outerGlow);
+
+        const beamMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false });
+        const beamCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.08, MAX_BEAM_LENGTH, 8), beamMat);
+        beamCyl.rotation.x = Math.PI / 2;
+        beamCyl.position.z = MAX_BEAM_LENGTH / 2;
+        beamGroup.add(beamCyl);
+
+        const innerMat = new THREE.MeshBasicMaterial({ color: 0xffaa44, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false });
+        const innerBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.025, MAX_BEAM_LENGTH, 8), innerMat);
+        innerBeam.rotation.x = Math.PI / 2;
+        innerBeam.position.z = MAX_BEAM_LENGTH / 2;
+        beamGroup.add(innerBeam);
+
+        const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false });
+        const coreBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.01, MAX_BEAM_LENGTH, 6), coreMat);
+        coreBeam.rotation.x = Math.PI / 2;
+        coreBeam.position.z = MAX_BEAM_LENGTH / 2;
+        beamGroup.add(coreBeam);
+
+        const dotMat = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending });
+        const dot = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), dotMat);
+        dot.position.z = MAX_BEAM_LENGTH;
+        beamGroup.add(dot);
+
+        const dotGlowMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending });
+        const dotGlow = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), dotGlowMat);
+        dotGlow.position.z = MAX_BEAM_LENGTH;
+        beamGroup.add(dotGlow);
+
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
+        const glow = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), glowMat);
+        glow.position.z = 0;
+        beamGroup.add(glow);
+        scene.add(beamGroup);
+
+        // --- ★★★ 新增：獨立的擊中光束 ★★★ ---
+        let hitBeamGroup = null;  // 用來儲存擊中光束的群組
+
+        // ★★★ 修改：更精緻的擊中光束 ★★★
+function createHitBeam() {
+    if (hitBeamGroup) {
+        scene.remove(hitBeamGroup);
+        hitBeamGroup = null;
+    }
+    
+    hitBeamGroup = new THREE.Group();
+    
+    // 外層光暈 (淡橘色，很淡)
+    const outerHitMat = new THREE.MeshBasicMaterial({ 
+        color: 0xff5500, 
+        transparent: true, 
+        opacity: 0.08,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
+    });
+    const outerHit = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.12, 1, 6), outerHitMat);
+    outerHit.rotation.x = Math.PI / 2;
+    outerHit.position.z = 0.5;
+    hitBeamGroup.add(outerHit);
+    
+    // 主光束 (橘紅色，半透明)
+    const mainHitMat = new THREE.MeshBasicMaterial({ 
+        color: 0xff4400, 
+        transparent: true, 
+        opacity: 0.35,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
+    });
+    const mainHit = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.04, 1, 6), mainHitMat);
+    mainHit.rotation.x = Math.PI / 2;
+    mainHit.position.z = 0.5;
+    hitBeamGroup.add(mainHit);
+    
+    // 核心 (白色)
+    const coreHitMat = new THREE.MeshBasicMaterial({ 
+        color: 0xffaa66, 
+        transparent: true, 
+        opacity: 0.3,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    });
+    const coreHit = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.015, 1, 4), coreHitMat);
+    coreHit.rotation.x = Math.PI / 2;
+    coreHit.position.z = 0.5;
+    hitBeamGroup.add(coreHit);
+    
+    // 終點紅點 (小一點)
+    const dotHitMat = new THREE.MeshBasicMaterial({ 
+        color: 0xff3300, 
+        transparent: true, 
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending
+    });
+    const dotHit = new THREE.Mesh(new THREE.SphereGeometry(0.10, 8, 8), dotHitMat);
+    dotHit.position.z = 1;
+    hitBeamGroup.add(dotHit);
+    
+    // 紅點光暈 (淡)
+    const glowHitMat = new THREE.MeshBasicMaterial({ 
+        color: 0xff4400, 
+        transparent: true, 
+        opacity: 0.2,
+        blending: THREE.AdditiveBlending
+    });
+    const glowHit = new THREE.Mesh(new THREE.SphereGeometry(0.20, 8, 8), glowHitMat);
+    glowHit.position.z = 1;
+    hitBeamGroup.add(glowHit);
+    
+    scene.add(hitBeamGroup);
+}
+
+function updateHitBeam(headPos, hitPoint) {
+    if (!hitBeamGroup) {
+        createHitBeam();
+    }
+    
+    const distToHit = headPos.distanceTo(hitPoint);
+    
+    hitBeamGroup.position.copy(headPos);
+    hitBeamGroup.lookAt(hitPoint);
+    
+    const scaleZ = distToHit;
+    hitBeamGroup.scale.z = scaleZ;
+    
+    // 距離越近越亮
+    const intensity = Math.min(1, 4.0 / (distToHit + 0.5));
+    
+    hitBeamGroup.children.forEach(child => {
+        if (child.material) {
+            const hex = child.material.color ? child.material.color.getHex() : 0;
+            if (hex === 0xff5500) {
+                child.material.opacity = 0.05 + intensity * 0.08;
+            } else if (hex === 0xff4400) {
+                child.material.opacity = 0.2 + intensity * 0.35;
+            } else if (hex === 0xffaa66) {
+                child.material.opacity = 0.15 + intensity * 0.25;
+            } else if (hex === 0xff3300) {
+                child.material.opacity = 0.5 + intensity * 0.4;
+            } else if (hex === 0xff4400 && child.geometry.type === 'SphereGeometry') {
+                child.material.opacity = 0.1 + intensity * 0.2;
+            }
+        }
+    });
+}
+
+
+
+        function clearHitBeam() {
+            if (hitBeamGroup) {
+                scene.remove(hitBeamGroup);
+                hitBeamGroup = null;
+            }
+        }
+
+        // --- 點雲系統 ---
+        const MAX_POINTS = 50000;
+        const positions = new Float32Array(MAX_POINTS * 3);
+        const colors = new Float32Array(MAX_POINTS * 3);
+        let pointIndex = 0;
+        const pointGeo = new THREE.BufferGeometry();
+        pointGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        pointGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        pointGeo.setDrawRange(0, 0);
+        const pointMat = new THREE.PointsMaterial({ size: 0.12, vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+        const pointCloud = new THREE.Points(pointGeo, pointMat);
+        scene.add(pointCloud);
+        const pointCountEl = document.getElementById('pointCount');
+
+        function addScanPoint(position, color) {
+            if (position.y > 0.5) return;
+            if (pointIndex >= MAX_POINTS) pointIndex = 0;
+            const i3 = pointIndex * 3;
+            positions[i3] = position.x;
+            positions[i3+1] = 0;
+            positions[i3+2] = position.z;
+            colors[i3] = color.r;
+            colors[i3+1] = color.g;
+            colors[i3+2] = color.b;
+            pointIndex++;
+            pointGeo.attributes.position.needsUpdate = true;
+            pointGeo.attributes.color.needsUpdate = true;
+            pointGeo.setDrawRange(0, pointIndex);
+            pointCountEl.textContent = pointIndex;
+        }
+
+        function getLaserLength(height) {
+            let length = height + 32;
+            if (length > 40) length = 40;
+            if (length < 36) length = 36;
+            return length;
+        }
+
+        // --- 掃描參數 ---
+        const HORIZONTAL_MIN = -1.658;
+        const HORIZONTAL_MAX = 1.658;
+        const H_STEP = 0.008;
+        const VERTICAL_MIN = 0.0;
+        const VERTICAL_MAX = Math.PI / 2;
+        const VERTICAL_STEP = 0.025;
+
+        const VERTICAL_STEPS = Math.round((VERTICAL_MAX - VERTICAL_MIN) / VERTICAL_STEP);
+        const HORIZONTAL_STEPS = Math.round((HORIZONTAL_MAX - HORIZONTAL_MIN) / H_STEP);
+        const TOTAL_STEPS_PER_CYCLE = VERTICAL_STEPS * 2 * HORIZONTAL_STEPS;
+        const TARGET_CYCLE_TIME = 17.0;
+        const BASE_STEPS_PER_SECOND = TOTAL_STEPS_PER_CYCLE / TARGET_CYCLE_TIME;
+
+        let currentHorizontal = HORIZONTAL_MAX;
+        let currentVertical = VERTICAL_MIN;
+        let verticalDirection = 1;
+        let isVerticalScanComplete = false;
+        let scanStepCounter = 0;
+        let cycleCount = 0;
+        let elapsedTime = 0;
+        let speedMultiplier = 1.0;
+        let currentHeight = 4.0;
+
+        const timerEl = document.getElementById('timerValue');
+        const cycleEl = document.getElementById('cycleCount');
+
+        function updateTimer() {
+            timerEl.textContent = elapsedTime.toFixed(1);
+            cycleEl.textContent = `/ 17.0s · 第 ${cycleCount} 輪`;
+        }
+
+        // --- 目標球相關 ---
+        let targetSphere = null;
+        let targetPosition = null;
+        let isScanPaused = false;
+        let hasHitTarget = false;
+        let hitHorizontalAngle = 0;
+        let isWaitingForCountdown = false;
+        const debugEl = document.getElementById('debug-status');
+
+        // --- 撒水系統 --- (撒水時間，10秒)
+        let isSpraying = false;
+        let sprayStartTime = 0;
+        const SPRAY_DURATION = 10000;
+        let waterParticles = [];
+        const waterDropGeo = new THREE.SphereGeometry(0.09, 6, 6);
+        const waterMaterial = new THREE.MeshStandardMaterial({ color: 0x3a86ff, emissive: 0x0088aa, transparent: true, opacity: 0.9 });
+        let hiddenAuxPoints = [];
+        let activeWaterTargets = [];
+        let isWaitingForSpray = false;
+        let waitStartTime = 0;
+        let waitDuration = 10;
+
+        function getWaterSegmentAndPoints(firePos) {
+            const nozzlePos = new THREE.Vector3();
+            tipMarker.getWorldPosition(nozzlePos);
+            
+            const deltaX = firePos.x - nozzlePos.x;
+            const deltaZ = firePos.z - nozzlePos.z;
+            const horizontalDist = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
+            let waterStartDist, waterEndDist;
+            if (horizontalDist <= 23) { waterStartDist = 0; waterEndDist = 23; }
+            else { waterStartDist = 23; waterEndDist = 40; }
+            const direction = new THREE.Vector3(deltaX, 0, deltaZ).normalize();
+            const nozzleGroundPos = new THREE.Vector3(nozzlePos.x, 0.3, nozzlePos.z);
+            const pointsCount = 16;
+            const points = [];
+            const segmentLength = waterEndDist - waterStartDist;
+            if (segmentLength <= 0.1) return { startDist: waterStartDist, endDist: waterEndDist, points: [], horizontalDist };
+            for (let i = 0; i <= pointsCount; i++) {
+                const t = i / pointsCount;
+                const distFromNozzle = waterStartDist + t * segmentLength;
+                const offset = direction.clone().multiplyScalar(distFromNozzle);
+                const pos = nozzleGroundPos.clone().add(offset);
+                pos.y = 0.2 + Math.sin(t * Math.PI) * 0.35;
+                const marker = new THREE.Mesh(new THREE.SphereGeometry(0.08, 4, 4), new THREE.MeshStandardMaterial({ transparent: true, visible: false }));
+                marker.position.copy(pos);
+                scene.add(marker);
+                points.push({ mesh: marker, position: pos.clone() });
+            }
+            return { startDist: waterStartDist, endDist: waterEndDist, points, horizontalDist };
+        }
+
+        function clearAuxPoints() {
+            hiddenAuxPoints.forEach(ap => scene.remove(ap.mesh));
+            hiddenAuxPoints = [];
+        }
+
+        function buildWaterTargets(firePos) {
+            const seg = getWaterSegmentAndPoints(firePos);
+            let targets = [];
+            targets.push({ pos: new THREE.Vector3(firePos.x, 0.45, firePos.z) });
+            for (let p of seg.points) {
+                targets.push({ pos: p.position.clone() });
+            }
+            const nozzlePos = new THREE.Vector3();
+            tipMarker.getWorldPosition(nozzlePos);
+            targets.sort((a,b) => a.pos.distanceTo(nozzlePos) - b.pos.distanceTo(nozzlePos));
+            return targets;
+        }
+
+        function calcVelocityToTarget(start, target) {
+            const dx = target.x - start.x, dz = target.z - start.z, dy = target.y - start.y;
+            const horiz = Math.sqrt(dx*dx + dz*dz);
+            const g = 0.012;
+            const time = Math.max(0.25, horiz * 0.045 + Math.sqrt(2 * Math.abs(dy) / g) * 0.7);
+            const vx = dx / time, vz = dz / time, vy = (dy + 0.5 * g * time * time) / time;
+            return new THREE.Vector3(vx, vy, vz);
+        }
+
+        function generateSprayParticles() {
+            if (!isSpraying || activeWaterTargets.length === 0) return;
+            const nozzlePos = new THREE.Vector3();
+            tipMarker.getWorldPosition(nozzlePos);
+            
+            const particlesPerFrame = 12;
+            for (let i=0; i<particlesPerFrame; i++) {
+                let targetIdx = Math.floor(Math.random() * activeWaterTargets.length);
+                let targetPoint = activeWaterTargets[targetIdx].pos.clone();
+                targetPoint.x += (Math.random() - 0.5) * 0.6;
+                targetPoint.z += (Math.random() - 0.5) * 0.6;
+                targetPoint.y += Math.random() * 0.5;
+                const drop = new THREE.Mesh(waterDropGeo, waterMaterial.clone());
+                drop.position.copy(nozzlePos);
+                const vel = calcVelocityToTarget(nozzlePos, targetPoint);
+                vel.x += (Math.random() - 0.5) * 0.12;
+                vel.z += (Math.random() - 0.5) * 0.12;
+                drop.userData = { velocity: vel, gravity: -0.012, life: 100 + Math.random() * 40 };
+                scene.add(drop);
+                waterParticles.push(drop);
+            }
+        }
+
+        function startSpraying() {
+            if (!targetPosition) return;
+            isSpraying = true;
+            sprayStartTime = Date.now();
+            activeWaterTargets = buildWaterTargets(new THREE.Vector3(targetPosition.x, 0, targetPosition.z));
+            waterStatusDiv.style.display = 'block';
+            waterStateText.textContent = '💦 撒水中...';
+            const nozzlePos = new THREE.Vector3();
+            tipMarker.getWorldPosition(nozzlePos);
+            const dist = Math.sqrt(
+                Math.pow(targetPosition.x - nozzlePos.x, 2) + 
+                Math.pow(targetPosition.z - nozzlePos.z, 2)
+            );
+            const zone = dist <= 23 ? '0~23m' : '23~40m';
+            const warn = document.getElementById('target-info').querySelector('.warning');
+            if (warn) warn.textContent = `💧 撒水區間: ${zone} (距離 ${dist.toFixed(1)}m)`;
+        }
+
+        function stopSpraying() {
+            isSpraying = false;
+            activeWaterTargets = [];
+            waterStateText.textContent = '✅ 撒水完成';
+            resetTriangleToStart();
+            // ★ 清除擊中光束
+            clearHitBeam();
+            setTimeout(() => {
+                waterStatusDiv.style.display = 'none';
+            }, 2000);
+            waterParticles.forEach(p => scene.remove(p));
+            waterParticles = [];
+        }
+
+        function updateDebugStatus() {
+            const status = isScanPaused ? '⏸️ 暫停' : '▶️ 運行中';
+            const hit = hasHitTarget ? '✅ 已定位' : '❌ 未定位';
+            const target = targetSphere ? '🎯 有目標' : '🔘 無目標';
+            const spray = isSpraying ? '💧 撒水' : (isWaitingForSpray ? '⏳ 等待' : '');
+            debugEl.textContent = `🔍 ${status} | ${hit} | ${target} ${spray}`;
+        }
+
+        function getGroundColor(x, z) {
+            const pattern = Math.sin(x * 0.3) * Math.cos(z * 0.4) * 0.3 + 0.7;
+            return new THREE.Color(0.2 + 0.25 * pattern, 0.3 + 0.3 * pattern, 0.5 + 0.3 * pattern);
+        }
+
+        function computeScanInfo(headPos, direction, targetPos) {
+            const toTarget = new THREE.Vector3(targetPos.x - headPos.x, -headPos.y, targetPos.z - headPos.z);
+            const dist = toTarget.length();
+            const dirNorm = toTarget.clone().normalize();
+            return {
+                x: targetPos.x, z: targetPos.z,
+                distOrigin: Math.sqrt(targetPos.x*targetPos.x + targetPos.z*targetPos.z),
+                hAngle: Math.atan2(dirNorm.z, dirNorm.x),
+                vAngle: Math.acos(Math.abs(dirNorm.y)),
+                distToHead: dist,
+                lensHeight: headPos.y,
+                lensAngleH: Math.atan2(headPos.z, headPos.x),
+                lensAngleV: currentVertical,
+            };
+        }
+
+        // ★★★ 檢測目標球是否在掃描路徑上 ★★★
+        function checkLaserHitTarget(headPos, direction, laserLength) {
+            if (!targetSphere || !targetPosition) return null;
+            
+            const sphereCenter = new THREE.Vector3(targetPosition.x, 0.35, targetPosition.z);
+            const sphereRadius = 0.35;
+            
+            const origin = headPos.clone();
+            const dir = direction.clone().normalize();
+            const toCenter = sphereCenter.clone().sub(origin);
+            const proj = toCenter.dot(dir);
+            
+            if (proj < 0) return null;
+            
+            const closestPoint = origin.clone().add(dir.clone().multiplyScalar(proj));
+            const distToLine = closestPoint.distanceTo(sphereCenter);
+            
+            if (distToLine > sphereRadius) return null;
+            
+            const hitOffset = Math.sqrt(sphereRadius * sphereRadius - distToLine * distToLine);
+            const hitDist = proj - hitOffset;
+            
+            if (hitDist < 0 || hitDist > laserLength) return null;
+            
+            const hitPoint = origin.clone().add(dir.clone().multiplyScalar(hitDist));
+            
+            return { 
+                hitPoint: hitPoint, 
+                hitDist: hitDist
+            };
+        }
+
+        function performScan() {
+            if (isScanPaused) return;
+
+            const headWorldPos = new THREE.Vector3();
+            headGroup.getWorldPosition(headWorldPos);
+            const direction = new THREE.Vector3(0, 0, 1);
+            direction.applyQuaternion(headGroup.getWorldQuaternion(new THREE.Quaternion()));
+            direction.normalize();
+            const laserLen = getLaserLength(currentHeight);
+            
+            // ★★★ 先檢查目標球是否在掃描路徑上 ★★★
+            if (!hasHitTarget && !isWaitingForCountdown && !isSpraying && targetSphere && targetPosition) {
+                const hitResult = checkLaserHitTarget(headWorldPos, direction, laserLen);
+                if (hitResult) {
+                    // ✅ 目標球在掃描路徑上！
+                    // ★★★ 繪製獨立的擊中光束 ★★★
+                    updateHitBeam(headWorldPos, hitResult.hitPoint);
+                    
+                    const info = computeScanInfo(headWorldPos, direction, targetPosition);
+                    document.getElementById('coordX').textContent = info.x.toFixed(2);
+                    document.getElementById('coordZ').textContent = info.z.toFixed(2);
+                    document.getElementById('distOrigin').textContent = info.distOrigin.toFixed(2);
+                    document.getElementById('angleH').textContent = (info.hAngle * 180 / Math.PI).toFixed(2);
+                    document.getElementById('angleV').textContent = (info.vAngle * 180 / Math.PI).toFixed(2);
+                    document.getElementById('lensHeight').textContent = info.lensHeight.toFixed(2);
+                    document.getElementById('lensAngleH').textContent = (info.lensAngleH * 180 / Math.PI).toFixed(2);
+                    document.getElementById('lensAngleV').textContent = (info.lensAngleV * 180 / Math.PI).toFixed(2);
+                    document.getElementById('distToTarget').textContent = info.distToHead.toFixed(2);
+                    document.getElementById('target-info').style.opacity = '1';
+                    isScanPaused = true;
+                    hasHitTarget = true;
+                    hitHorizontalAngle = currentHorizontal;
+                    isWaitingForCountdown = true;
+
+                    waterStatusDiv.style.display = 'block';
+                    waterStateText.textContent = '⏳ 目標確認中...';
+
+                    targetSphere.material.emissive.setHex(0xff4400);
+                    targetSphere.material.emissiveIntensity = 1.0;
+                    let flashCount = 0;
+                    const flashInterval = setInterval(() => {
+                        if (flashCount > 5) {
+                            clearInterval(flashInterval);
+                            if (targetSphere) { targetSphere.material.emissive.setHex(0xaa2222); targetSphere.material.emissiveIntensity = 0.3; }
+                            return;
+                        }
+                        if (targetSphere) targetSphere.material.emissiveIntensity = flashCount % 2 === 0 ? 1.0 : 0.2;
+                        flashCount++;
+                    }, 200);
+
+                    showCountdown(() => {
+                        waterStateText.textContent = '🔄 噴頭定位中...';
+                        triGroup.rotation.y = LASER_START_ANGLE;
+                        currentTriAngle = LASER_START_ANGLE;
+                        
+                        startTriangleRotation(hitHorizontalAngle, () => {
+                            isWaitingForCountdown = false;
+                            updateDebugStatus();
+                            
+                            waitDuration = parseFloat(document.getElementById('waitSlider').value);
+                            isWaitingForSpray = true;
+                            waitStartTime = Date.now();
+                            waterStateText.textContent = `⏳ 等待 ${waitDuration}s 後撒水...`;
+                            document.getElementById('target-info').querySelector('.warning').textContent = `⏳ 等待 ${waitDuration}s 後開始撒水`;
+
+                            const waitInterval = setInterval(() => {
+                                const elapsed = (Date.now() - waitStartTime) / 1000;
+                                const remaining = Math.max(0, waitDuration - elapsed);
+                                waterStateText.textContent = `⏳ 等待 ${Math.ceil(remaining)}s 後撒水...`;
+                                if (remaining <= 0) {
+                                    clearInterval(waitInterval);
+                                    isWaitingForSpray = false;
+                                    waterStateText.textContent = '💦 撒水中...';
+                                    startSpraying();
+                                    setTimeout(() => {
+                                        stopSpraying();
+                                        if (targetSphere) {
+                                            scene.remove(targetSphere);
+                                            targetSphere = null;
+                                            targetPosition = null;
+                                        }
+                                        hasHitTarget = false;
+                                        isScanPaused = false;
+                                        document.getElementById('target-info').style.opacity = '0';
+                                        updateDebugStatus();
+                                    }, SPRAY_DURATION);
+                                }
+                            }, 500);
+                        });
+                    });
+                    
+                    // ★★★ 重要：擊中目標後立即返回，不再執行後續的地面掃描 ★★★
+                    return;
+                }
+            }
+
+            // --- 地面掃描 (未擊中目標時，光束延伸到地面) ---
+            const t = -headWorldPos.y / direction.y;
+            if (t > 0 && t < laserLen * 1.2) {
+                const exactHitPoint = new THREE.Vector3().copy(headWorldPos).add(direction.clone().multiplyScalar(t));
+                exactHitPoint.y = 0;
+                const groundPoint = exactHitPoint.clone();
+                groundPoint.x += (Math.random() - 0.5) * 0.15;
+                groundPoint.z += (Math.random() - 0.5) * 0.15;
+                groundPoint.y = 0;
+                const color = getGroundColor(groundPoint.x, groundPoint.z);
+                addScanPoint(groundPoint, color);
+                
+                const distToGround = headWorldPos.distanceTo(groundPoint);
+                beamGroup.position.copy(headWorldPos);
+                beamGroup.lookAt(groundPoint);
+                const scale = Math.min(distToGround / MAX_BEAM_LENGTH, 1.0);
+                beamCyl.scale.z = scale;
+                innerBeam.scale.z = scale;
+                dot.position.z = distToGround;
+
+                const intensity = Math.min(1, 5.0 / (distToGround + 0.5));
+                beamMat.opacity = 0.15 + intensity * 0.3;
+                innerMat.opacity = 0.3 + intensity * 0.4;
+                coreMat.opacity = 0.1 + intensity * 0.2;
+                dotMat.opacity = 0.6 + intensity * 0.4;
+                dotGlowMat.opacity = 0.2 + intensity * 0.5;
+                outerGlowMat.opacity = 0.05 + intensity * 0.1;
+            } else {
+                const fallbackPoint = new THREE.Vector3().copy(headWorldPos).add(direction.clone().multiplyScalar(laserLen));
+                fallbackPoint.y = 0;
+                const color = getGroundColor(fallbackPoint.x, fallbackPoint.z);
+                addScanPoint(fallbackPoint, color);
+                beamGroup.position.copy(headWorldPos);
+                beamGroup.lookAt(fallbackPoint);
+                const scale = Math.min(laserLen / MAX_BEAM_LENGTH, 1.0);
+                beamCyl.scale.z = scale;
+                innerBeam.scale.z = scale;
+                dot.position.z = laserLen;
+            }
+            scanStepCounter++;
+        }
+
+        // --- Sprite 標籤 ---
+        function createSpriteLabel(text) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'rgba(10,20,40,0.7)';
+            ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 20;
+            ctx.beginPath(); ctx.roundRect(20,20,472,88,30); ctx.fill(); ctx.shadowBlur = 0;
+            ctx.strokeStyle = 'rgba(100,200,255,0.3)'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.roundRect(20,20,472,88,30); ctx.stroke();
+            ctx.font = 'bold 48px "Segoe UI","PingFang TC",sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 15;
+            ctx.fillStyle = '#ffffff'; ctx.fillText(text, 256, 64);
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false }));
+            sprite.scale.set(6, 1.5, 1);
+            return sprite;
+        }
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r) {
+                if (r > w/2) r = w/2; if (r > h/2) r = h/2;
+                this.moveTo(x+r,y); this.lineTo(x+w-r,y); this.quadraticCurveTo(x+w,y,x+w,y+r);
+                this.lineTo(x+w,y+h-r); this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+                this.lineTo(x+r,y+h); this.quadraticCurveTo(x,y+h,x,y+h-r);
+                this.lineTo(x,y+r); this.quadraticCurveTo(x,y,x+r,y); this.closePath(); return this;
+            };
+        }
+        const heightLabel = createSpriteLabel('📏 設置高度: 4.0 m');
+        heightLabel.position.set(0, 8, 0); scene.add(heightLabel);
+        const rangeLabel = createSpriteLabel('🎯 最遠掃描: 36.0 m');
+        rangeLabel.position.set(0, -0.8, 36); scene.add(rangeLabel);
+        const dirLabel = createSpriteLabel('掃描區域', '#88ddff');
+        dirLabel.position.set(0, 2.0, 28); scene.add(dirLabel);
+
+        function updateLabelText(sprite, text) {
+            const canvas = sprite.material.map.image;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = 'rgba(10,20,40,0.7)'; ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 20;
+            ctx.beginPath(); ctx.roundRect(20,20,472,88,30); ctx.fill(); ctx.shadowBlur = 0;
+            ctx.strokeStyle = 'rgba(100,200,255,0.3)'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.roundRect(20,20,472,88,30); ctx.stroke();
+            ctx.font = 'bold 48px "Segoe UI","PingFang TC",sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 15;
+            ctx.fillStyle = '#ffffff'; ctx.fillText(text, 256, 64);
+            sprite.material.map.needsUpdate = true;
+        }
+
+        // --- 高度控制 ---
+        const heightSlider = document.getElementById('heightSlider');
+        const heightDisplay = document.getElementById('heightDisplay');
+        heightSlider.addEventListener('input', () => {
+            currentHeight = parseFloat(heightSlider.value);
+            heightDisplay.textContent = currentHeight.toFixed(1);
+            scannerGroup.position.y = currentHeight;
+            triGroup.position.y = currentHeight - 0.2;
+            controls.target.y = currentHeight * 0.5 + 1;
+            updateLabelText(heightLabel, `📏 設置高度: ${currentHeight.toFixed(1)} m`);
+            const laserLen = getLaserLength(currentHeight);
+            updateLabelText(rangeLabel, `🎯 最遠掃描: ${laserLen.toFixed(1)} m`);
+            rangeLabel.position.set(0, -0.8, laserLen);
+        });
+
+        const speedSlider = document.getElementById('speedSlider');
+        const speedDisplay = document.getElementById('speedDisplay');
+        speedSlider.addEventListener('input', () => {
+            speedMultiplier = parseFloat(speedSlider.value);
+            speedDisplay.textContent = speedMultiplier.toFixed(1);
+            if (isScanPaused && !hasHitTarget) { isScanPaused = false; document.getElementById('target-info').style.opacity = '0.5'; updateDebugStatus(); }
+        });
+
+        const waitSlider = document.getElementById('waitSlider');
+        const waitDisplay = document.getElementById('waitDisplay');
+        waitSlider.addEventListener('input', () => {
+            waitDisplay.textContent = waitSlider.value;
+        });
+
+        scannerGroup.position.y = 4.0;
+        triGroup.position.y = 3.8;
+
+        // --- 滑鼠右鍵放置目標球 ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        renderer.domElement.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+            if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+            countdownOverlay.style.display = 'none';
+            isCountdownActive = false;
+            isWaitingForCountdown = false;
+            isWaitingForSpray = false;
+            isSpraying = false;
+            window._pendingWaitCallback = null;
+            waterParticles.forEach(p => scene.remove(p));
+            waterParticles = [];
+            clearAuxPoints();
+            if (targetSphere) { scene.remove(targetSphere); targetSphere = null; targetPosition = null; }
+            hasHitTarget = false; isScanPaused = false;
+            document.getElementById('target-info').style.opacity = '0';
+            isTriRotating = false;
+            triGroup.rotation.y = LASER_START_ANGLE;
+            currentTriAngle = LASER_START_ANGLE;
+            waterStatusDiv.style.display = 'none';
+            // ★ 清除擊中光束
+            clearHitBeam();
+            updateDebugStatus();
+
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const planeNormal = new THREE.Vector3(0, 1, 0);
+            const plane = new THREE.Plane(planeNormal, 0);
+            const intersectPoint = new THREE.Vector3();
+            const intersect = raycaster.ray.intersectPlane(plane, intersectPoint);
+            if (intersect) {
+                const dist = Math.sqrt(intersectPoint.x*intersectPoint.x + intersectPoint.z*intersectPoint.z);
+                if (dist > 35) return;
+                const sphereGeo = new THREE.SphereGeometry(0.35, 24, 24);
+                const sphereMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x888888, emissiveIntensity: 0.2, roughness: 0.3, metalness: 0.3, transparent: true, opacity: 0.95 });
+                targetSphere = new THREE.Mesh(sphereGeo, sphereMat);
+                targetSphere.position.set(intersectPoint.x, 0.35, intersectPoint.z);
+                scene.add(targetSphere);
+                targetPosition = { x: intersectPoint.x, z: intersectPoint.z };
+                document.getElementById('target-info').style.opacity = '0.5';
+                document.getElementById('coordX').textContent = '---';
+                document.getElementById('coordZ').textContent = '---';
+                document.getElementById('distOrigin').textContent = '---';
+                document.getElementById('angleH').textContent = '---';
+                document.getElementById('angleV').textContent = '---';
+                document.getElementById('lensHeight').textContent = '---';
+                document.getElementById('lensAngleH').textContent = '---';
+                document.getElementById('lensAngleV').textContent = '---';
+                document.getElementById('distToTarget').textContent = '---';
+                const warn = document.getElementById('target-info').querySelector('.warning');
+                if (warn) warn.textContent = '⚡ 掃描中，等待光束接觸目標...';
+                updateDebugStatus();
+            }
+        });
+
+        // --- 按鈕 ---
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+            countdownOverlay.style.display = 'none';
+            isCountdownActive = false; isWaitingForCountdown = false; isWaitingForSpray = false; isSpraying = false;
+            window._pendingWaitCallback = null;
+            waterParticles.forEach(p => scene.remove(p)); waterParticles = [];
+            if (targetSphere) { isScanPaused = false; hasHitTarget = false; document.getElementById('target-info').style.opacity = '0.5'; targetSphere.material.emissive.setHex(0xaa2222); targetSphere.material.emissiveIntensity = 0.3; updateDebugStatus(); }
+            else { isScanPaused = false; updateDebugStatus(); }
+            waterStatusDiv.style.display = 'none';
+            clearHitBeam();
+            resetTriangleToStart();
+        });
+
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+            countdownOverlay.style.display = 'none';
+            isCountdownActive = false; isWaitingForCountdown = false; isWaitingForSpray = false; isSpraying = false;
+            window._pendingWaitCallback = null;
+            waterParticles.forEach(p => scene.remove(p)); waterParticles = [];
+            clearAuxPoints();
+            clearHitBeam();
+            if (targetSphere) { scene.remove(targetSphere); targetSphere = null; targetPosition = null; }
+            hasHitTarget = false; isScanPaused = false; document.getElementById('target-info').style.opacity = '0';
+            pointIndex = 0; pointGeo.setDrawRange(0, 0); pointCountEl.textContent = '0';
+            currentHorizontal = HORIZONTAL_MAX; currentVertical = VERTICAL_MIN; verticalDirection = 1;
+            isVerticalScanComplete = false; scanStepCounter = 0; elapsedTime = 0; cycleCount = 0; updateTimer();
+            platformGroup.rotation.y = currentHorizontal; tiltGroup.rotation.x = currentVertical;
+            speedMultiplier = 1.0; speedSlider.value = '1.0'; speedDisplay.textContent = '1.0';
+            isTriRotating = false; triGroup.rotation.y = LASER_START_ANGLE; currentTriAngle = LASER_START_ANGLE;
+            waterStatusDiv.style.display = 'none';
+            updateDebugStatus();
+        });
+
+        // --- 動畫循環 ---
+        let frameCount = 0;
+        let lastTime = performance.now();
+
+        function animate(currentTime) {
+            requestAnimationFrame(animate);
+            const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.05);
+            lastTime = currentTime;
+            frameCount++;
+            if (frameCount % 60 === 0) updateDebugStatus();
+
+            updateTriangle();
+
+            if (!isScanPaused && !isSpraying) {
+                const stepsPerFrame = BASE_STEPS_PER_SECOND * speedMultiplier * deltaTime;
+                const stepsToDo = Math.max(1, Math.floor(stepsPerFrame));
+                elapsedTime += deltaTime;
+                if (elapsedTime > TARGET_CYCLE_TIME) elapsedTime = elapsedTime - TARGET_CYCLE_TIME;
+                updateTimer();
+
+                for (let i = 0; i < stepsToDo; i++) {
+                    const currentVSpeed = VERTICAL_STEP * speedMultiplier;
+                    currentVertical += currentVSpeed * verticalDirection;
+                    if (currentVertical >= VERTICAL_MAX) { currentVertical = VERTICAL_MAX; verticalDirection = -1; isVerticalScanComplete = true; }
+                    else if (currentVertical <= VERTICAL_MIN) { currentVertical = VERTICAL_MIN; verticalDirection = 1; if (isVerticalScanComplete) { currentHorizontal -= H_STEP; if (currentHorizontal < HORIZONTAL_MIN) { currentHorizontal = HORIZONTAL_MAX; cycleCount++; updateTimer(); isVerticalScanComplete = false; scanStepCounter = 0; } } }
+                    platformGroup.rotation.y = currentHorizontal;
+                    tiltGroup.rotation.x = currentVertical;
+                    performScan();
+                }
+            } else {
+                // 暫停時保持光束顯示
+                const headWorldPos = new THREE.Vector3();
+                headGroup.getWorldPosition(headWorldPos);
+                const direction = new THREE.Vector3(0, 0, 1);
+                direction.applyQuaternion(headGroup.getWorldQuaternion(new THREE.Quaternion()));
+                direction.normalize();
+                const laserLen = getLaserLength(currentHeight);
+                const t = -headWorldPos.y / direction.y;
+                if (t > 0 && t < laserLen * 1.2) {
+                    const groundPoint = new THREE.Vector3().copy(headWorldPos).add(direction.clone().multiplyScalar(t));
+                    groundPoint.y = 0;
+                    const distToGround = headWorldPos.distanceTo(groundPoint);
+                    beamGroup.position.copy(headWorldPos);
+                    beamGroup.lookAt(groundPoint);
+                    const scale = Math.min(distToGround / MAX_BEAM_LENGTH, 1.0);
+                    beamCyl.scale.z = scale;
+                    innerBeam.scale.z = scale;
+                    dot.position.z = distToGround;
+                }
+            }
+
+            // 撒水粒子更新
+            if (isSpraying) {
+                generateSprayParticles();
+            }
+            for (let i = waterParticles.length-1; i>=0; i--) {
+                const p = waterParticles[i];
+                p.position.x += p.userData.velocity.x;
+                p.position.y += p.userData.velocity.y;
+                p.position.z += p.userData.velocity.z;
+                p.userData.velocity.y += p.userData.gravity;
+                p.userData.life--;
+                if (p.userData.life <= 0 || p.position.y < -0.3 || p.position.y > 15) {
+                    scene.remove(p);
+                    waterParticles.splice(i,1);
+                }
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        requestAnimationFrame(animate);
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        for (let i = 0; i < 500; i++) performScan();
+        updateTimer();
+        updateDebugStatus();
+        console.log('✅ 獨立擊中光束版完成');
+        console.log('流程: 掃描 → 目標球在路徑上 → 繪製獨立擊中光束 (紅點在球上) → 倒數3秒 → 噴頭轉向 → 等待 → 撒水');
+        console.log('🔧 關鍵修正: 使用完全獨立的光束群組，不受地面光束影響');
+    </script>
+	
+    <button onclick="window.location.href='index.html'" 
+        style="position: fixed; bottom: 20px; right: 20px; padding: 8px 18px; background: #2c5a7a; color: white; border: none; border-radius: 30px; cursor: pointer; z-index: 9999; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+        🏠 返回主選單
+    </button>
+</body>
+</html>
